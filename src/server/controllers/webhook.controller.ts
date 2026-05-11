@@ -17,6 +17,8 @@ export const verifyWebhook = (req: Request, res: Response) => {
     } else {
       res.sendStatus(403);
     }
+  } else {
+    res.status(400).json({ status: "error", message: "fail to verify webhook" });
   }
 };
 
