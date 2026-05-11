@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { notionService } from "../services/notion.service.ts";
+import { notionService } from "../services/notion.service.js";
 
 export const getLogs = async (req: Request, res: Response) => {
   try {

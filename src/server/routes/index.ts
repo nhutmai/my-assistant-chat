@@ -1,7 +1,7 @@
 import { Router } from "express";
-import * as aiController from "../controllers/ai.controller.ts";
-import * as logController from "../controllers/log.controller.ts";
-import * as webhookController from "../controllers/webhook.controller.ts";
+import * as aiController from "../controllers/ai.controller.js";
+import * as logController from "../controllers/log.controller.js";
+import * as webhookController from "../controllers/webhook.controller.js";
 
 const router = Router();
 

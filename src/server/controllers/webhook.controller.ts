@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { aiService } from "../services/ai.service.ts";
-import { notionService } from "../services/notion.service.ts";
-import { messengerService } from "../services/messenger.service.ts";
+import { aiService } from "../services/ai.service.js";
+import { notionService } from "../services/notion.service.js";
+import { messengerService } from "../services/messenger.service.js";
 
 export const verifyWebhook = (req: Request, res: Response) => {
   const mode = req.query["hub.mode"];

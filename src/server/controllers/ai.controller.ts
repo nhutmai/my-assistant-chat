@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { aiService } from "../services/ai.service.ts";
-import { notionService } from "../services/notion.service.ts";
+import { aiService } from "../services/ai.service.js";
+import { notionService } from "../services/notion.service.js";
 
 export const generateAIContent = async (req: Request, res: Response) => {
   const { prompt } = req.body;
