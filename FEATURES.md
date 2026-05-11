@@ -30,16 +30,39 @@
     - Hỗ trợ làm mới (Refresh) dữ liệu thủ công.
     - Hiển thị ID bản ghi, thời gian tạo và nội dung đã trích xuất.
 
-## 4. Kiến trúc Kỹ thuật (Backend - Express)
-- **Ngôn ngữ:** TypeScript.
-- **API Endpoints:**
-    - `POST /api/ai/generate`: Nhận prompt, gọi AI và lưu vào Notion.
-    - `GET /api/logs`: Lấy danh sách lịch sử từ Notion.
-- **Bảo mật (Lưu ý):** Mặc dù tài liệu `API_DOCUMENTATION.md` có đề cập đến xác thực JWT, nhưng trong mã nguồn hiện tại (`src/server/routes/index.ts`), các route đang được để công khai (Public) và tính năng AUTH hiển thị là `DISABLED` trên giao diện.
-- **Bảo mật & Cấu hình:** Sử dụng biến môi trường (`.env`) để quản lý API Keys.
+## 4. Tích hợp Facebook Messenger (Mới)
+- **Webhook tự động:** Nhận tin nhắn trực tiếp từ người dùng qua Facebook Messenger.
+- **Xử lý thông minh:** Sử dụng cùng luồng AI trích xuất như giao diện Web để phân loại tin nhắn Messenger.
+- **Phản hồi thời gian thực:** Tự động gửi tin nhắn xác nhận "Đã lưu thành công" hoặc báo lỗi quay lại Messenger cho người dùng sau khi dữ liệu được lưu vào Notion.
+- **Endpoint Webhook:**
+    - `GET /api/webhook/messenger`: Xác thực webhook với Facebook.
+    - `POST /api/webhook/messenger`: Tiếp nhận và xử lý sự kiện tin nhắn.
 
-## 5. Yêu cầu Hệ thống (Environment Variables)
+## 5. Tích hợp Telegram Bot (Mới)
+- **Bot Username:** `@NoteNotionAssistantBot`
+- **Xử lý Webhook:** Nhận tin nhắn từ Telegram và tự động phản hồi sau khi xử lý.
+- **Tính năng:** Tương tự Messenger, hỗ trợ trích xuất AI và lưu Notion trực tiếp từ chat.
+- **Endpoint Webhook:** `POST /api/webhook/telegram`
+
+## 6. Kiến trúc Kỹ thuật (Backend - Express)
+- **Ngôn ngữ:** TypeScript.
+- **Dịch vụ (Services):**
+    - `AIService`: Xử lý logic với Groq AI.
+    - `NotionService`: Tương tác với Notion API.
+    - `MessengerService`: Giao tiếp với Facebook Send API.
+    - `TelegramService`: Giao tiếp với Telegram Bot API.
+- **API Endpoints:**
+    - `POST /api/ai/generate`: Nhận prompt từ Web.
+    - `GET /api/logs`: Lấy lịch sử từ Notion.
+    - `GET/POST /api/webhook/messenger`: Xử lý Webhook Facebook.
+    - `POST /api/webhook/telegram`: Xử lý Webhook Telegram.
+- **Bảo mật (Lưu ý):** Các route đang được để công khai (Public).
+
+## 7. Yêu cầu Hệ thống (Environment Variables)
 Để ứng dụng hoạt động đầy đủ, cần cấu hình các biến sau:
 - `GROQ_API_KEY`: Key truy cập Groq AI.
 - `NOTION_API_KEY`: Token tích hợp Notion.
 - `NOTION_DATABASE_ID`: ID của database trong Notion.
+- `FB_PAGE_ACCESS_TOKEN`: Token của Page Facebook.
+- `FB_VERIFY_TOKEN`: Mã xác thực Webhook Facebook.
+- `TELEGRAM_BOT_TOKEN`: Token từ BotFather cho Telegram Bot.

@@ -15,4 +15,7 @@ router.get("/logs", logController.getLogs);
 router.get("/webhook/messenger", webhookController.verifyWebhook);
 router.post("/webhook/messenger", webhookController.handleMessage);
 
+// Telegram Webhook Route
+router.post("/webhook/telegram", webhookController.handleTelegramMessage);
+
 export default router;
