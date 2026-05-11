@@ -13,16 +13,23 @@ export const generateAIContent = async (req: Request, res: Response) => {
     const result = await aiService.generateContent(prompt);
     // Lưu vào Notion
     await notionService.saveLog(prompt, result);
-    
-    res.json({ success: true, data: result });
+
+    res.status(201).json({
+      status: "success",
+      data: result,
+      message: "Content generated and logged successfully"
+    });
   } catch (error: any) {
     // Ghi log lỗi vào Notion để hiển thị trên giao diện web
-    await notionService.saveLog(prompt, { 
-      category: "error", 
+    await notionService.saveLog(prompt, {
+      category: "error",
       title: `Error: ${error.message || "Unknown error"}`,
       value: 0,
       date: new Date().toISOString()
     });
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      status: "error",
+      message: error.message || "Internal Server Error"
+    });
   }
 };

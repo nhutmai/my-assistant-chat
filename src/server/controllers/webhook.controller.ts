@@ -13,7 +13,6 @@ export const verifyWebhook = (req: Request, res: Response) => {
 
   if (mode && token) {
     if (mode === "subscribe" && token === verifyToken) {
-      console.log("WEBHOOK_VERIFIED");
       res.status(200).send(challenge);
     } else {
       res.sendStatus(403);
@@ -46,8 +45,8 @@ export const handleMessage = async (req: Request, res: Response) => {
           } catch (error: any) {
             console.error("Webhook Processing Error:", error);
             // Ghi log lỗi vào Notion để hiển thị trên giao diện web
-            await notionService.saveLog(messageText, { 
-              category: "error", 
+            await notionService.saveLog(messageText, {
+              category: "error",
               title: `Error: ${error.message || "Unknown error"}`,
               value: 0,
               date: new Date().toISOString()
@@ -57,43 +56,47 @@ export const handleMessage = async (req: Request, res: Response) => {
         }
       }
     }
-    res.status(200).send("EVENT_RECEIVED");
+    res.status(200).json({ status: "success", message: "EVENT_RECEIVED" });
   } else {
-    res.sendStatus(404);
+    res.status(400).json({ status: "error", message: "Invalid webhook object, please check request body" });
   }
 };
 
 export const handleTelegramMessage = async (req: Request, res: Response) => {
   const { message } = req.body;
 
-  if (message && message.text) {
-    const chatId = message.chat.id;
-    const messageText = message.text;
-
-    try {
-      // 1. Process with AI
-      const aiResult = await aiService.generateContent(messageText);
-
-      // 2. Save to Notion
-      await notionService.saveLog(messageText, aiResult);
-
-      // 3. Respond to user
-      const responseText = `<b>✅ Đã lưu thành công!</b>\n\n📌 <b>Loại:</b> ${aiResult.category}\n📝 <b>Nội dung:</b> ${aiResult.title}\n💰 <b>Giá trị:</b> ${aiResult.value || 0}\n📅 <b>Ngày:</b> ${aiResult.date}`;
-      await telegramService.sendMessage(chatId, responseText);
-    } catch (error: any) {
-      console.error("Telegram Webhook Error:", error);
-      
-      // Log error to Notion
-      await notionService.saveLog(messageText, { 
-        category: "error", 
-        title: `Telegram Error: ${error.message || "Unknown error"}`,
-        value: 0,
-        date: new Date().toISOString()
-      });
-
-      await telegramService.sendMessage(chatId, "❌ Có lỗi xảy ra khi xử lý tin nhắn của bạn.");
-    }
+  if (!message || !message.text) {
+    return res.status(400).json({ status: "error", message: "Invalid message format" });
   }
 
-  res.status(200).send("OK");
+  const chatId = message.chat.id;
+  const messageText = message.text;
+
+  try {
+    // 1. Process with AI
+    const aiResult = await aiService.generateContent(messageText);
+
+    // 2. Save to Notion
+    await notionService.saveLog(messageText, aiResult);
+
+    // 3. Respond to user
+    const responseText = `<b>✅ Đã lưu thành công!</b>\n\n📌 <b>Loại:</b> ${aiResult.category}\n📝 <b>Nội dung:</b> ${aiResult.title}\n💰 <b>Giá trị:</b> ${aiResult.value || 0}\n📅 <b>Ngày:</b> ${aiResult.date}`;
+    await telegramService.sendMessage(chatId, responseText);
+
+    res.status(200).json({ status: "success", message: "Message processed" });
+  } catch (error: any) {
+    console.error("Telegram Webhook Error:", error);
+
+    // Log error to Notion
+    await notionService.saveLog(messageText, {
+      category: "error",
+      title: `Telegram Error: ${error.message || "Unknown error"}`,
+      value: 0,
+      date: new Date().toISOString()
+    });
+
+    await telegramService.sendMessage(chatId, "❌ Có lỗi xảy ra khi xử lý tin nhắn của bạn.");
+
+    res.status(500).json({ status: "error", message: "Internal Server Error" });
+  }
 };
