@@ -1,15 +1,13 @@
 import { Router } from "express";
-import * as authController from "../controllers/auth.controller.ts";
 import * as aiController from "../controllers/ai.controller.ts";
-import { authMiddleware } from "../middlewares/auth.middleware.ts";
+import * as logController from "../controllers/log.controller.ts";
 
 const router = Router();
 
-// Auth Routes
-router.post("/auth/login", authController.login);
-router.post("/auth/logout", authController.logout);
+// AI Routes
+router.post("/ai/generate", aiController.generateAIContent);
 
-// AI Routes (Protected)
-router.post("/ai/generate", authMiddleware, aiController.generateAIContent);
+// Log Routes
+router.get("/logs", logController.getLogs);
 
 export default router;

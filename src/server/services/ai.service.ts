@@ -1,30 +1,48 @@
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
+import { notionService } from "./notion.service.ts";
 
 export class AIService {
-  private ai: GoogleGenAI;
+  private groq: OpenAI;
+  private readonly modelName = "llama-3.3-70b-versatile";
 
   constructor() {
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not defined in environment variables.");
+      throw new Error("GROQ_API_KEY is not defined in environment variables.");
     }
-    this.ai = new GoogleGenAI({ apiKey });
+
+    this.groq = new OpenAI({
+      apiKey: apiKey,
+      baseURL: "https://api.groq.com/openai/v1"
+    });
   }
 
   async generateContent(prompt: string) {
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
+      const completion = await this.groq.chat.completions.create({
+        model: this.modelName,
+        messages: [
+          {
+            role: "system",
+            content: "Bạn là hệ thống trích xuất dữ liệu. Luôn trả về kết quả dưới định dạng JSON nguyên bản, không giải thích."
+          },
+          {
+            role: "user",
+            content: `Phân loại nội dung sau: "${prompt}". Schema: { category: "chi tiêu" | "ghi chú", title: string, value: number | null, date: string }`
+          }
+        ],
+        response_format: { type: "json_object" }
       });
 
-      if (!response.text) {
-        throw new Error("No content generated from Gemini API.");
-      }
+      const content = completion.choices[0].message.content || "{}";
+      const result = JSON.parse(content);
 
-      return response.text;
+      // Save log to Notion
+      await notionService.saveLog(prompt, result);
+
+      return result;
     } catch (error) {
-      console.error("Gemini API Error:", error);
+      console.error("Groq API Error:", error);
       throw new Error("Failed to generate AI content.");
     }
   }

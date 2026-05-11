@@ -1,53 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Send, LogIn, LogOut, Loader2, Sparkles, User, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Send, Loader2, Sparkles, AlertCircle, Terminal, ClipboardList } from "lucide-react";
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [activeTab, setActiveTab] = useState<"console" | "logs">("console");
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [appReady, setAppReady] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
 
-  // Check if session exists (simplified)
   useEffect(() => {
     setAppReady(true);
+    fetchLogs();
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  const fetchLogs = async () => {
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await fetch("/api/logs");
       const data = await response.json();
       if (response.ok) {
-        setIsLoggedIn(true);
-        setUsername("");
-        setPassword("");
-      } else {
-        setError(data.message || "Login failed");
+        setLogs(data.data || []);
       }
     } catch (err) {
-      setError("Network error occurred");
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch logs", err);
     }
-  };
-
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setIsLoggedIn(false);
-    setResult("");
-    setPrompt("");
   };
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -63,10 +41,10 @@ export default function App() {
       });
       const data = await response.json();
       if (response.ok) {
-        setResult(data.data);
+        setResult(JSON.stringify(data.data, null, 2));
+        fetchLogs(); // Refresh logs after generation
       } else {
         setError(data.message || "Failed to generate content");
-        if (response.status === 401) setIsLoggedIn(false);
       }
     } catch (err) {
       setError("Network error occurred");
@@ -94,14 +72,6 @@ export default function App() {
             <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
             <span className="text-[10px] text-[#888] font-mono tracking-wider uppercase">Engine Status: Ready</span>
           </div>
-          {isLoggedIn && (
-            <button 
-              onClick={handleLogout}
-              className="px-4 py-1.5 rounded bg-[#1a1a1a] border border-[#333] text-[10px] uppercase tracking-widest hover:bg-[#222] text-white transition-colors"
-            >
-              Terminate Session
-            </button>
-          )}
         </div>
       </header>
 
@@ -109,22 +79,32 @@ export default function App() {
         {/* Sidebar */}
         <aside className="hidden lg:flex w-72 border-r border-[#2a2a2a] bg-[#0e0e0e] flex-col shrink-0">
           <div className="p-6">
-            <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#555] font-bold mb-6 italic">Architecture Stack</h2>
-            <ul className="space-y-3 font-mono text-[12px]">
-              <li className="text-[#888] flex items-center gap-2"><span className="opacity-40">📁</span> node_modules/</li>
-              <li className="text-[#888] flex items-center gap-2"><span className="opacity-40">📁</span> src/</li>
-              <li className="text-[#aaa] pl-4 flex items-center gap-2"><span className="opacity-40">📁</span> backend/</li>
-              <li className="text-blue-400 pl-8 flex items-center gap-2 italic"><span className="opacity-60 text-xs text-white">↳</span> gemini.service.ts</li>
-              <li className="text-[#888] flex items-center gap-2 mt-4"><span className="opacity-40">📄</span> server.ts</li>
-              <li className="text-blue-400 flex items-center gap-2"><span className="opacity-40">📄</span> .env</li>
-            </ul>
+            <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#555] font-bold mb-6 italic">Navigation</h2>
+            <nav className="space-y-2">
+              <button
+                onClick={() => setActiveTab("console")}
+                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all ${activeTab === "console" ? "bg-blue-600/10 text-blue-400 border border-blue-500/30" : "text-[#888] hover:bg-white/5"
+                  }`}
+              >
+                <Terminal size={16} />
+                Console
+              </button>
+              <button
+                onClick={() => setActiveTab("logs")}
+                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all ${activeTab === "logs" ? "bg-purple-600/10 text-purple-400 border border-purple-500/30" : "text-[#888] hover:bg-white/5"
+                  }`}
+              >
+                <ClipboardList size={16} />
+                Request Logs
+              </button>
+            </nav>
           </div>
           <div className="mt-auto p-6 border-t border-[#2a2a2a] bg-[#111]">
             <p className="text-[10px] text-[#555] uppercase tracking-widest mb-3 font-bold">Node Runtime</p>
             <div className="text-[11px] font-mono bg-black/40 p-3 rounded border border-[#222] text-dim leading-relaxed">
-              <span className="text-purple-400">NODE_ENV</span>=production<br/>
-              <span className="text-purple-400">PORT</span>=3000<br/>
-              <span className="text-purple-400">AUTH</span>=JWT_COOKIE
+              <span className="text-purple-400">NODE_ENV</span>=production<br />
+              <span className="text-purple-400">PORT</span>=3000<br />
+              <span className="text-purple-400">AUTH</span>=DISABLED
             </div>
           </div>
         </aside>
@@ -135,85 +115,17 @@ export default function App() {
             <div className="text-blue-400 flex items-center gap-2">
               <span className="opacity-50">✦</span> Gemini Engine Console
             </div>
-            <div className="text-[#555] text-[10px] uppercase tracking-tighter">/api/ai/generate</div>
+            <div className="text-[#555] text-[10px] uppercase tracking-tighter">/api/{activeTab === "console" ? "ai/generate" : "logs"}</div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 md:p-10 flex flex-col items-center">
             <AnimatePresence mode="wait">
-              {!isLoggedIn ? (
-                <motion.div
-                  key="login-view"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="w-full max-w-md bg-[#111] p-8 rounded-2xl border border-[#222] shadow-2xl relative overflow-hidden"
-                >
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-600"></div>
-                  <h2 className="text-lg font-serif italic mb-8 text-center text-white">Authentication Required</h2>
-                  
-                  <form onSubmit={handleLogin} className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-[#555] font-bold">Identity</label>
-                      <div className="relative group">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-[#444] transition-colors group-focus-within:text-blue-500" size={16} />
-                        <input
-                          type="text"
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          placeholder="admin"
-                          className="w-full pl-10 pr-4 py-3 bg-black/40 border border-[#222] rounded-lg focus:border-blue-500/50 outline-none transition-all text-sm font-mono"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-[#555] font-bold">Access Token</label>
-                      <div className="relative group">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#444] transition-colors group-focus-within:text-blue-500" size={16} />
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="w-full pl-10 pr-12 py-3 bg-black/40 border border-[#222] rounded-lg focus:border-blue-500/50 outline-none transition-all text-sm font-mono"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#444] hover:text-blue-500 transition-colors"
-                        >
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    {error && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="p-3 bg-red-950/20 border border-red-900/30 text-red-400 text-xs rounded-lg flex items-center gap-2"
-                      >
-                        <AlertCircle size={14} />
-                        {error}
-                      </motion.div>
-                    )}
-
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-white py-3 rounded-lg font-mono text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
-                    >
-                      {loading ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />}
-                      Establishing Uplink
-                    </button>
-                    <p className="text-center text-[10px] text-[#444] font-mono">CREDENTIALS_RETAINED: NO</p>
-                  </form>
-                </motion.div>
-              ) : (
+              {activeTab === "console" ? (
                 <motion.div
                   key="engine-view"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   className="w-full max-w-4xl space-y-8"
                 >
                   <div className="bg-[#111] border border-[#222] rounded-2xl overflow-hidden shadow-xl">
@@ -237,15 +149,20 @@ export default function App() {
                             className="w-full p-4 bg-black/40 border border-[#222] rounded-xl focus:border-blue-500/50 outline-none transition-all text-sm font-mono leading-relaxed"
                           />
                         </div>
+                        {error && (
+                          <div className="p-3 bg-red-950/20 border border-red-900/30 text-red-400 text-xs rounded-lg flex items-center gap-2">
+                            <AlertCircle size={14} />
+                            {error}
+                          </div>
+                        )}
                         <div className="flex justify-end">
                           <button
                             type="submit"
                             disabled={loading || !prompt}
-                            className={`px-8 py-3 rounded-lg font-mono text-xs uppercase tracking-[0.2em] transition-all flex items-center gap-3 border shadow-lg ${
-                              loading || !prompt 
-                              ? "bg-[#111] border-[#222] text-[#444] shadow-none" 
-                              : "bg-blue-600/10 border-blue-500/30 text-blue-400 hover:bg-blue-600/20 shadow-blue-500/5"
-                            }`}
+                            className={`px-8 py-3 rounded-lg font-mono text-xs uppercase tracking-[0.2em] transition-all flex items-center gap-3 border shadow-lg ${loading || !prompt
+                                ? "bg-[#111] border-[#222] text-[#444] shadow-none"
+                                : "bg-blue-600/10 border-blue-500/30 text-blue-400 hover:bg-blue-600/20 shadow-blue-500/5"
+                              }`}
                           >
                             {loading ? <Loader2 size={16} className="animate-spin text-blue-500" /> : <Send size={16} />}
                             Execute Query
@@ -285,6 +202,65 @@ export default function App() {
                       </div>
                     </motion.div>
                   )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="logs-view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="w-full max-w-5xl space-y-6"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-lg font-serif italic text-white">System Logs (Notion DB)</h2>
+                    <button
+                      onClick={fetchLogs}
+                      className="text-[10px] uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2"
+                    >
+                      Refresh Logs
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {logs.length === 0 ? (
+                      <div className="bg-[#111] border border-[#222] p-12 rounded-2xl text-center text-[#555] font-mono text-sm">
+                        No records found in database.
+                      </div>
+                    ) : (
+                      logs.map((log, index) => (
+                        <div key={index} className="bg-[#111] border border-[#222] rounded-xl overflow-hidden">
+                          <div className="px-4 py-2 bg-[#161616] border-b border-[#222] flex justify-between items-center text-[10px] font-mono">
+                            <span className="text-blue-400">ID: {log.id?.substring(0, 8)}...</span>
+                            <span className="text-[#555]">{new Date(log.created_time).toLocaleString()}</span>
+                          </div>
+                          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-widest text-[#444] mb-2 font-bold">Request Prompt</p>
+                              <div className="bg-black/30 p-3 rounded border border-[#222] text-xs font-mono text-[#888] line-clamp-3">
+                                {log.properties?.Prompt?.title?.[0]?.plain_text || "N/A"}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase tracking-widest text-[#444] mb-2 font-bold">Extracted Data</p>
+                              <div className="bg-black/30 p-3 rounded border border-[#222] text-xs font-mono text-[#aaa]">
+                                {log.properties?.Category?.select?.name && (
+                                  <span className="inline-block px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] mr-2">
+                                    {log.properties.Category.select.name}
+                                  </span>
+                                )}
+                                {log.properties?.Title?.rich_text?.[0]?.plain_text || "Untitled"}
+                                {log.properties?.Value?.number !== null && (
+                                  <span className="ml-2 text-green-400">
+                                    ({log.properties.Value.number})
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
