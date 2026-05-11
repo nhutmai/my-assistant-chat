@@ -1,5 +1,4 @@
 import OpenAI from "openai";
-import { notionService } from "./notion.service.ts";
 
 export class AIService {
   private groq: OpenAI;
@@ -35,12 +34,7 @@ export class AIService {
       });
 
       const content = completion.choices[0].message.content || "{}";
-      const result = JSON.parse(content);
-
-      // Save log to Notion
-      await notionService.saveLog(prompt, result);
-
-      return result;
+      return JSON.parse(content);
     } catch (error) {
       console.error("Groq API Error:", error);
       throw new Error("Failed to generate AI content.");

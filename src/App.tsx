@@ -244,7 +244,11 @@ export default function App() {
                               <p className="text-[10px] uppercase tracking-widest text-[#444] mb-2 font-bold">Extracted Data</p>
                               <div className="bg-black/30 p-3 rounded border border-[#222] text-xs font-mono text-[#aaa]">
                                 {log.properties?.Category?.select?.name && (
-                                  <span className="inline-block px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] mr-2">
+                                  <span className={`inline-block px-2 py-0.5 rounded border text-[9px] mr-2 ${
+                                    log.properties.Category.select.name === 'error' 
+                                    ? "bg-red-500/10 text-red-400 border-red-500/20" 
+                                    : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                  }`}>
                                     {log.properties.Category.select.name}
                                   </span>
                                 )}

@@ -8,9 +8,6 @@ export class NotionService {
     const apiKey = process.env.NOTION_API_KEY;
     this.databaseId = process.env.NOTION_DATABASE_ID || "";
 
-    console.log("apiKey", apiKey);
-    console.log("databaseId", this.databaseId);
-
     if (!apiKey) {
       console.warn("NOTION_API_KEY is not defined. Notion logging will be disabled.");
     }
