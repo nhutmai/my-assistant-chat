@@ -7,3 +7,5 @@ coverage/
 .env*
 !.env.example
 Prompt.txt
+.vercel
+.env*.local
