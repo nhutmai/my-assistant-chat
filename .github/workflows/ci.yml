@@ -47,9 +47,20 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
+            set -eu
+
+            export PATH="/usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin:$PATH"
+
             whoami
+
             hostname
+
             pwd
+
             docker --version
+
             docker compose version
+
             make --version
+
+            printf "%s\n" "$APP_ENV_FILE" > .env
