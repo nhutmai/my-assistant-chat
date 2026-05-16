@@ -1,4 +1,4 @@
-name: CI
+name: CI-CD
 
 on:
   push:
@@ -29,30 +29,27 @@ jobs:
       - name: Build
         run: npm run build
 
-  # deploy to vercel
-  deploy:
+        
+
+  deploy-vps:
+    name: Deploy to VPS
     runs-on: ubuntu-latest
     needs: test-and-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Test SSH connection
+        uses: appleboy/ssh-action@v1.2.0
 
-      - name: Install Vercel CLI
-        run: npm install --global vercel
-
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            whoami
+            hostname
+            pwd
+            docker --version
+            docker compose version
+            make --version

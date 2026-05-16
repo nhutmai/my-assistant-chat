@@ -52,3 +52,18 @@ Common shortcuts are available through `Makefile`:
 - `make docker-down`: stop Docker services
 - `make docker-logs`: tail Docker logs
 - `make docker-db-shell`: open a `psql` session inside the PostgreSQL container
+
+## GitHub Deploy to VPS
+
+The GitHub Actions workflow deploys to a VPS over SSH on pushes to `main`.
+
+Required GitHub Secrets:
+
+- `VPS_HOST`: VPS public IP or domain
+- `VPS_PORT`: SSH port, usually `22`
+- `VPS_USER`: SSH username
+- `VPS_SSH_KEY`: private SSH key used by GitHub Actions
+- `VPS_APP_PATH`: absolute app path on the VPS, for example `/opt/my-assistant-chat`
+- `VPS_REPO_URL`: Git repository SSH/HTTPS URL
+- `VPS_REPO_BRANCH`: branch to deploy, usually `main`
+- `APP_ENV_FILE`: full `.env` file content written on the VPS before `docker compose up`

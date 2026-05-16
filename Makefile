@@ -1,4 +1,4 @@
-.PHONY: help install dev build preview lint clean env-docker docker-build docker-up docker-down docker-restart docker-logs docker-ps docker-shell docker-db-shell docker-config docker-clean
+.PHONY: help install dev build preview lint clean env-docker docker-build docker-up docker-down docker-restart docker-logs docker-ps docker-shell docker-db-shell docker-config docker-clean docker-deploy
 
 COMPOSE := docker compose
 APP_SERVICE := app
@@ -23,6 +23,7 @@ help:
 	@printf "  make docker-db-shell Open psql shell in PostgreSQL container\n"
 	@printf "  make docker-config   Validate expanded Docker Compose config\n"
 	@printf "  make docker-clean    Stop services and remove volumes\n\n"
+	@printf "  make docker-deploy   Deploy on VPS\n"
 
 install:
 	npm install
@@ -74,3 +75,8 @@ docker-config:
 
 docker-clean:
 	$(COMPOSE) down -v
+
+docker-deploy:
+	$(COMPOSE) down
+	$(COMPOSE) up --build -d --remove-orphans
+	$(COMPOSE) ps

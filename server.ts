@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import { existsSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import app from "./src/server/index.js";
@@ -20,7 +21,16 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     // In production, serve high-performance static files
-    const distPath = path.join(__dirname, "dist");
+    const distCandidates = [
+      path.join(__dirname, "dist"),
+      path.join(__dirname, "..", "dist"),
+    ];
+    const distPath = distCandidates.find((candidate) => existsSync(candidate));
+
+    if (!distPath) {
+      throw new Error(`Unable to locate dist directory. Checked: ${distCandidates.join(", ")}`);
+    }
+
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
