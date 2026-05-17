@@ -65,3 +65,6 @@ jobs:
             make --version
 
             printf "%s\n" "$APP_ENV_FILE" > .env
+
+        env:
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
