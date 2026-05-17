@@ -69,4 +69,4 @@ jobs:
             printf "%s" "$APP_ENV_FILE" > .env
 
             make docker-deploy
-            docker image prune -f
+            make docker-prune

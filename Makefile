@@ -81,3 +81,6 @@ docker-deploy:
 	$(COMPOSE) down
 	$(COMPOSE) up --build -d --remove-orphans
 	$(COMPOSE) ps
+
+docker-prune:
+	$(DOCKER) image prune -f
