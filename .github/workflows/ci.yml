@@ -38,33 +38,35 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Test SSH connection
+      - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
-
+        env:
+          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
+          port: ${{ secrets.VPS_PORT || 22 }}
           envs: APP_ENV_FILE
           script: |
             set -eu
 
-            export PATH="/usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin:$PATH"
+            DEPLOY_PATH="${{ secrets.VPS_APP_PATH }}"
+            REPO_URL="${{ secrets.VPS_REPO_URL }}"
+            REPO_BRANCH="${{ secrets.VPS_REPO_BRANCH }}"
 
-            whoami
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              mkdir -p "$DEPLOY_PATH"
+              git clone --branch "$REPO_BRANCH" "$REPO_URL" "$DEPLOY_PATH"
+            fi
 
-            hostname
+            cd "$DEPLOY_PATH"
 
-            pwd
+            git fetch origin "$REPO_BRANCH"
+            git checkout "$REPO_BRANCH"
+            git reset --hard "origin/$REPO_BRANCH"
 
-            docker --version
+            printf "%s" "$APP_ENV_FILE" > .env
 
-            docker compose version
-
-            make --version
-
-            printf "%s\n" "$APP_ENV_FILE" > .env
-
-        env:
-          APP_ENV_FILE: ${{ secrets.APP_ENV_FILE }}
+            make docker-deploy
+            docker image prune -f
