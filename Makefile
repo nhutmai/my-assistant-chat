@@ -1,6 +1,7 @@
 .PHONY: help install dev build preview lint clean env-docker docker-build docker-up docker-down docker-restart docker-logs docker-ps docker-shell docker-db-shell docker-config docker-clean docker-deploy
 
-COMPOSE := docker compose
+DOCKER := /usr/local/bin/docker
+COMPOSE := $(DOCKER) compose
 APP_SERVICE := app
 DB_SERVICE := postgres
 
