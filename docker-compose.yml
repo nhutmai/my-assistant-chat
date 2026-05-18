@@ -21,6 +21,7 @@ services:
       FB_PAGE_ACCESS_TOKEN: ${FB_PAGE_ACCESS_TOKEN:-}
       FB_VERIFY_TOKEN: ${FB_VERIFY_TOKEN:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      ENABLE_POSTGRES_STORAGE: ${ENABLE_POSTGRES_STORAGE:-false}
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,7 +39,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
       interval: 10s
       timeout: 5s
       retries: 5

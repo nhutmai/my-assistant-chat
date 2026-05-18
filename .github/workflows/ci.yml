@@ -72,6 +72,7 @@ jobs:
           POSTGRES_DB: assistant_chat
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
+          TEST_CONSTANT: 123
         run: |
           # Build server for testing
           npm run build:server
