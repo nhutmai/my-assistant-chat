@@ -29,12 +29,63 @@ jobs:
       - name: Build
         run: npm run build
 
-        
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: assistant_chat
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Integration Tests
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          # Enable Postgres storage only for the main branch (VPS)
+          ENABLE_POSTGRES_STORAGE: ${{ github.ref == 'refs/heads/main' }}
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: assistant_chat
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        run: |
+          # Build server for testing
+          npm run build:server
+          # Start server in background
+          node build/server.js &
+          # Wait for server to start
+          sleep 10
+          # Run API tests
+          npm test
 
   deploy-vps:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    needs: test-and-build
+    needs: [test-and-build, integration-test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -70,6 +121,27 @@ jobs:
 
             make docker-deploy
             make docker-prune
+
+            echo "=== [HEALTH CHECK] Verifying Deployment ==="
+            
+            # 1. Check if App is reachable
+            for i in {1..10}; do
+              if curl -sf http://localhost:3000/api/logs > /dev/null; then
+                echo "[OK] App is reachable."
+                break
+              fi
+              echo "[WAIT] App not ready, retrying in 5s... ($i/10)"
+              sleep 5
+            done
+
+            # 2. Check if Database is healthy (Only for VPS/Docker)
+            echo "=== [DB CHECK] Verifying PostgreSQL ==="
+            if docker exec my-assistant-chat-postgres pg_isready -U postgres; then
+              echo "[OK] Database is healthy."
+            else
+              echo "[FAIL] Database check failed!"
+              exit 1
+            fi
   
   deploy-vercel:
 

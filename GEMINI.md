@@ -36,10 +36,10 @@ Gemini Bridge is a full-stack application that acts as a middleware bridging AI 
 - **Component Style**: Write all React 19 components as function components.
 - **Styling**: Use Tailwind CSS v4 utility classes exclusively for layout and design.
 - **Icons**: Utilize Lucide icons for all UI iconography requirements.
-- **API Requests**: Perform all network requests using the centralized Axios client; do not use the raw `fetch` API.
+- **API Requests**: The long-term goal is to use a centralized Axios client in `src/lib/api.ts`. Currently, legacy components may still use the raw `fetch` API, but new features should prioritize migration to Axios.
 
 # Environment & Secrets
-- **Key Registry**: Required keys include `GROQ_API_KEY`, `NOTION_API_KEY`, `NOTION_DATABASE_ID`, `TELEGRAM_BOT_TOKEN`, and Messenger/Webhook tokens.
+- **Key Registry**: Required keys include `GROQ_API_KEY`, `NOTION_API_KEY`, `NOTION_DATABASE_ID`, `TELEGRAM_BOT_TOKEN`, `FB_PAGE_ACCESS_TOKEN`, and `FB_VERIFY_TOKEN`.
 - **Access Pattern**: Retrieve all secrets via `process.env` on the backend only; never expose these to the client.
 - **Forbidden Storage**: Never hardcode sensitive information; use the `.env` file for local development and Vercel dashboard for production.
 

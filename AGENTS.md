@@ -9,7 +9,7 @@ This is a TypeScript React/Vite app with a Node/Express API layer.
 - `src/server/routes/` defines route registration; `src/server/controllers/` handles request/response logic; `src/server/services/` contains integrations for AI, Notion, Messenger, and Telegram.
 - `api/index.ts` is the Vercel API entry point, while `server.ts` runs the local combined app.
 - `scratch/` contains utility scripts, such as Telegram webhook setup.
-- Project documentation lives in `README.md`, `ARCHITECTURE.md`, `API_DOCUMENTATION.md`, and `FEATURES.md`.
+- Project documentation lives in `README.md`, `ARCHITECTURE.md`, `API_DOCUMENTATION.md`, and `ROADMAP.md`.
 
 ## Build, Test, and Development Commands
 
