@@ -136,7 +136,7 @@ jobs:
 
             # 2. Check if Database is healthy (Only for VPS/Docker)
             echo "=== [DB CHECK] Verifying PostgreSQL ==="
-            if docker exec my-assistant-chat-postgres pg_isready -U postgres; then
+            if make docker-check-db; then
               echo "[OK] Database is healthy."
             else
               echo "[FAIL] Database check failed!"
