@@ -71,6 +71,9 @@ docker-shell:
 docker-db-shell:
 	$(COMPOSE) exec $(DB_SERVICE) psql -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-assistant_chat}
 
+docker-check-db:
+	$(DOCKER) exec $(DB_SERVICE) pg_isready -U $${POSTGRES_USER:-postgres}
+
 docker-config:
 	$(COMPOSE) config
 
