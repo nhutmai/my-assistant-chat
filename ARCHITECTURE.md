@@ -62,6 +62,12 @@ The project follows a "Single Repo, Unified Build" strategy:
 - **Current State**: Authentication is **Disabled** in the current implementation.
 - **Planned**: JWT-based authentication using cookies. The infrastructure (`cookie-parser`, `jsonwebtoken`) is already present in `package.json` but not yet integrated into the route handlers.
 - **Environment Variables**: Sensitive keys (API tokens) are stored in `.env` and accessed via `process.env` on the backend.
+  - `GROQ_API_KEY`: API key for Groq AI inference.
+  - `NOTION_API_KEY`: Integration token for Notion.
+  - `NOTION_DATABASE_ID`: The ID of the Notion database for logging.
+  - `TELEGRAM_BOT_TOKEN`: Bot token from BotFather.
+  - `FB_PAGE_ACCESS_TOKEN`: Facebook Page Access Token for Messenger.
+  - `FB_VERIFY_TOKEN`: Custom token for Facebook Webhook verification.
 
 ## 7. Development Guidelines
 - **Type Safety**: Use shared interfaces for API payloads.

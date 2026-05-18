@@ -20,23 +20,36 @@ Hiện tại, hệ thống đang hoạt động ở chế độ **Public (AUTH=D
     "prompt": "Ăn sáng phở thìn 50k"
   }
   ```
-- **Phản hồi thành công (200):**
+- **Phản hồi thành công (201):**
   ```json
   {
-    "success": true,
+    "status": "success",
     "data": {
       "category": "chi tiêu",
       "title": "Ăn sáng phở thìn",
       "value": 50000,
       "date": "2024-05-20"
-    }
+    },
+    "message": "Content generated and logged successfully"
   }
   ```
 
 ### Lấy lịch sử Logs
 - **Endpoint:** `GET /api/logs`
 - **Mô tả:** Lấy 20 bản ghi mới nhất từ Notion Database.
-- **Phản hồi thành công (200):** Trả về mảng các object từ Notion API.
+- **Phản hồi thành công (200):**
+  ```json
+  {
+    "status": "success",
+    "data": [
+      {
+        "object": "page",
+        "id": "...",
+        "properties": { ... }
+      }
+    ]
+  }
+  ```
 
 ---
 
