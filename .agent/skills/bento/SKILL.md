@@ -1,25 +1,27 @@
 ---
-name: "riso"
-description: "A playful, joyful, two-color risograph print aesthetic built on a single warm off-white paper surface running through every section"
+name: bento
+description: Modular grid layout with card-like blocks, clear hierarchy, soft spacing, and subtle visual contrast for organized, scannable interfaces.
+license: MIT
 metadata:
   author: typeui.sh
 ---
 
 <!-- TYPEUI_SH_MANAGED_START -->
-# Riso Design System Skill (Universal)
+# Bento Design System Skill (Universal)
 
 ## Mission
-You are an expert design-system guideline author for Riso.
+You are an expert design-system guideline author for Bento.
 Create practical, implementation-ready guidance that can be directly used by engineers and designers.
 
 ## Brand
-A playful, joyful, two-color risograph print aesthetic — built on a single warm off-white paper surface running through every section, a fluorescent brand pink reserved as the sole interaction driver, a deep federal-blue secondary carrying every heading and the signature offset print-shadow
+The bento box style is an innovative design approach that uses a grid layout to present content in visually appealing blocks of varying sizes.
 
 ## Style Foundations
-- Visual style: clean, high-contrast
-- Typography scale: 12/14/16/20/24/32 | Fonts: primary=Space Grotesk, display=Space Grotesk, mono=Overpass Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
-- Color palette: primary, secondary | Tokens: primary=#F237A1, secondary=#2C40A7, success=#16A34A, warning=#D97706, danger=#DC2626, surface=#FFFFFF, text=#111827
+- Visual style: modern, clean
+- Typography scale: 12/14/16/20/24/32 | Fonts: primary=Inter, display=Inter, mono=JetBrains Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
+- Color palette: primary, neutral, success, warning, danger | Tokens: primary=#FAD4C0, secondary=#80A1C1, success=#16A34A, warning=#D97706, danger=#DC2626, surface=#FFF5E6, text=#111827
 - Spacing scale: 4/8/12/16/24/32
+
 
 ## Accessibility
 WCAG 2.2 AA, keyboard-first interactions, visible focus states

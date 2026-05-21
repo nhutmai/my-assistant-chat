@@ -69,14 +69,16 @@ No dedicated automated test framework is currently configured. Before submitting
 - **Secrets Audit**: Verify that no API keys or personal credentials have been accidentally added to the source code.
 
 ## UI / Design Rules
-The Riso design system must be applied automatically to every UI task—even when the user makes no mention of design or style:
-- **Silently Read Design Docs**: Always read `.agent/skills/riso/DESIGN.md` and `.agent/skills/riso/SKILL.md` before writing any UI/frontend code.
+The Bento design system must be applied automatically to every UI task—even when the user makes no mention of design or style:
+- **Silently Read Design Docs**: Always read `.agent/skills/bento/DESIGN.md` and `.agent/skills/bento/SKILL.md` before writing any UI/frontend code.
 - **Scope**: These rules are always active for all components, pages, layouts, and forms, without needing an explicit prompt.
-- **Riso Tokens Only**: Use only the designated colors: primary `#F237A1` (which must be the sole interaction color), secondary `#2C40A7`, surface `#FFFFFF`, and text `#111827`.
+- **Bento Tokens Only**: Use only the designated colors: primary `#FAD4C0` (pastel peach), secondary `#80A1C1` (periwinkle slate blue), surface `#FFF5E6` (warm cream surface), and text `#111827` (charcoal text).
 - **Spacing Scale**: Adhere strictly to the spacing scale `4/8/12/16/24/32`px (e.g., using Tailwind equivalents like `p-1`, `p-2`, `p-3`, `p-4`, `p-6`, `p-8`). Never use arbitrary values.
-- **Fonts**: Use `Space Grotesk` for all UI text, and `Overpass Mono` for all labels and code blocks.
-- **Interaction States**: Every interactive element (buttons, links, inputs, etc.) must explicitly define all of the following states: default, hover, focus-visible, active, and disabled.
+- **Fonts**: Use `Inter` for all UI text and headings, and `JetBrains Mono` for all labels and code blocks.
+- **Layout & Sizing**: Use a modular bento grid layout with card-like blocks, clear visual hierarchy, soft spacing, and rounded corners (`rounded-2xl` for cards, `rounded-xl` for buttons/inputs).
+- **Interaction States**: Every interactive element (buttons, links, inputs, tabs, etc.) must explicitly define all of the following states: default, hover, focus-visible, active (e.g., active:scale-95), and disabled.
 - **Accessibility**: Ensure full WCAG 2.2 AA contrast compliance on all text and interactive elements.
+
 
 ## Forbidden Actions
 - **DO NOT** hardcode secrets or sensitive credentials into the source code.

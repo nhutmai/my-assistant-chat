@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Send, Loader2, Sparkles, AlertCircle, Terminal, ClipboardList } from "lucide-react";
+import { Send, Loader2, Sparkles, AlertCircle, Terminal, ClipboardList, RefreshCw, Cpu, Activity, Info } from "lucide-react";
+import api from "./lib/api.js"; // Import centralized Axios client
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"console" | "logs">("console");
@@ -18,11 +19,8 @@ export default function App() {
 
   const fetchLogs = async () => {
     try {
-      const response = await fetch("/api/logs");
-      const data = await response.json();
-      if (response.ok) {
-        setLogs(data.data || []);
-      }
+      const response = await api.get("/api/logs");
+      setLogs(response.data?.data || []);
     } catch (err) {
       console.error("Failed to fetch logs", err);
     }
@@ -34,20 +32,11 @@ export default function App() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/ai/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setResult(JSON.stringify(data.data, null, 2));
-        fetchLogs(); // Refresh logs after generation
-      } else {
-        setError(data.message || "Failed to generate content");
-      }
-    } catch (err) {
-      setError("Network error occurred");
+      const response = await api.post("/api/ai/generate", { prompt });
+      setResult(JSON.stringify(response.data?.data, null, 2));
+      fetchLogs(); // Refresh logs after generation
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to generate content");
     } finally {
       setLoading(false);
     }
@@ -56,205 +45,234 @@ export default function App() {
   if (!appReady) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0c0c0c] text-[#e0e0e0] font-sans overflow-hidden">
-      {/* Header */}
-      <header className="flex items-center justify-between px-8 py-4 border-b border-[#2a2a2a] bg-[#111111] shrink-0">
+    <div className="min-h-screen flex flex-col bg-bg-paper text-text font-sans overflow-hidden p-6 md:p-8 gap-6 md:gap-8">
+      {/* Header Bento Card */}
+      <header className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/10">
-            <Sparkles className="text-white w-5 h-5" />
+          <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+            <Sparkles className="text-text w-5 h-5" />
           </div>
-          <h1 className="text-xl font-serif italic tracking-wide text-white">
-            Gemini Bridge <span className="text-xs font-sans not-italic text-[#666] ml-2 font-medium uppercase tracking-[0.2em]">v2.1.0</span>
-          </h1>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-text">
+              Gemini Bridge
+            </h1>
+            <p className="text-[10px] font-mono text-secondary uppercase tracking-wider">Middleware Integration Engine</p>
+          </div>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="flex gap-2 items-center">
-            <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
-            <span className="text-[10px] text-[#888] font-mono tracking-wider uppercase">Engine Status: Ready</span>
+        <div className="flex items-center gap-4 flex-wrap">
+          <span className="text-[10px] font-mono text-text bg-primary/30 border border-primary/40 px-3 py-1 rounded-xl font-bold">
+            v2.1.0
+          </span>
+          <div className="flex gap-2 items-center px-3 py-1 rounded-xl bg-surface border border-secondary/30 font-mono text-[10px] uppercase text-text shadow-sm font-semibold">
+            <span className="w-2 h-2 rounded-full bg-success"></span>
+            <span>Engine Status: Ready</span>
           </div>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <aside className="hidden lg:flex w-72 border-r border-[#2a2a2a] bg-[#0e0e0e] flex-col shrink-0">
-          <div className="p-6">
-            <h2 className="text-[10px] uppercase tracking-[0.2em] text-[#555] font-bold mb-6 italic">Navigation</h2>
-            <nav className="space-y-2">
+      {/* Main Grid Wrapper */}
+      <div className="flex-1 grid grid-cols-12 gap-6 md:gap-8 items-start overflow-y-auto pr-1">
+        {/* Navigation & System Info Card (col-span-12 or col-span-4 on lg) */}
+        <aside className="col-span-12 lg:col-span-4 flex flex-col gap-6 md:gap-8 h-full">
+          {/* Bento Navigation Block */}
+          <div className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-4">
+            <h2 className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold font-mono flex items-center gap-1.5">
+              <Cpu size={12} />
+              Engine Control
+            </h2>
+            <nav className="space-y-3">
               <button
                 onClick={() => setActiveTab("console")}
-                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all ${activeTab === "console" ? "bg-blue-600/10 text-blue-400 border border-blue-500/30" : "text-[#888] hover:bg-white/5"
-                  }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-98 text-sm font-semibold ${
+                  activeTab === "console"
+                    ? "bg-primary border-primary/50 text-text shadow-sm"
+                    : "bg-surface border-secondary/20 text-text hover:bg-primary/20 hover:border-primary/20"
+                }`}
               >
                 <Terminal size={16} />
-                Console
+                Console Panel
               </button>
               <button
                 onClick={() => setActiveTab("logs")}
-                className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all ${activeTab === "logs" ? "bg-purple-600/10 text-purple-400 border border-purple-500/30" : "text-[#888] hover:bg-white/5"
-                  }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 active:scale-98 text-sm font-semibold ${
+                  activeTab === "logs"
+                    ? "bg-primary border-primary/50 text-text shadow-sm"
+                    : "bg-surface border-secondary/20 text-text hover:bg-primary/20 hover:border-primary/20"
+                }`}
               >
                 <ClipboardList size={16} />
                 Request Logs
               </button>
             </nav>
           </div>
-          <div className="mt-auto p-6 border-t border-[#2a2a2a] bg-[#111]">
-            <p className="text-[10px] text-[#555] uppercase tracking-widest mb-3 font-bold">Node Runtime</p>
-            <div className="text-[11px] font-mono bg-black/40 p-3 rounded border border-[#222] text-dim leading-relaxed">
-              <span className="text-purple-400">NODE_ENV</span>=production<br />
-              <span className="text-purple-400">PORT</span>=3000<br />
-              <span className="text-purple-400">AUTH</span>=DISABLED
+
+          {/* System Runtime block */}
+          <div className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-3 flex-1">
+            <h2 className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold font-mono flex items-center gap-1.5">
+              <Info size={12} />
+              Node Runtime Env
+            </h2>
+            <div className="text-[11px] font-mono bg-bg-paper/40 p-4 rounded-xl border border-secondary/20 text-text leading-relaxed space-y-2">
+              <div>
+                <span className="text-secondary font-bold">NODE_ENV</span>
+                <span className="text-text/75 ml-2 font-semibold">= production</span>
+              </div>
+              <div>
+                <span className="text-secondary font-bold">PORT</span>
+                <span className="text-text/75 ml-2 font-semibold">= 3000</span>
+              </div>
+              <div>
+                <span className="text-secondary font-bold">AUTH</span>
+                <span className="text-text/75 ml-2 font-semibold">= DISABLED</span>
+              </div>
+            </div>
+            <div className="text-[10px] text-secondary font-semibold font-mono flex items-center gap-1.5 pt-2">
+              <Activity size={10} className="text-success" />
+              <span>PID: 14208 | Uptime: 72h</span>
             </div>
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col bg-[#0c0c0c] overflow-hidden">
-          <div className="flex items-center gap-4 px-6 py-2 bg-[#161616] border-b border-[#2a2a2a] shrink-0 text-xs">
-            <div className="text-blue-400 flex items-center gap-2">
-              <span className="opacity-50">✦</span> Gemini Engine Console
-            </div>
-            <div className="text-[#555] text-[10px] uppercase tracking-tighter">/api/{activeTab === "console" ? "ai/generate" : "logs"}</div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-6 md:p-10 flex flex-col items-center">
-            <AnimatePresence mode="wait">
-              {activeTab === "console" ? (
-                <motion.div
-                  key="engine-view"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="w-full max-w-4xl space-y-8"
-                >
-                  <div className="bg-[#111] border border-[#222] rounded-2xl overflow-hidden shadow-xl">
-                    <div className="px-6 py-3 border-b border-[#222] flex items-center justify-between bg-[#161616]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span className="text-[10px] uppercase tracking-widest text-[#888] font-mono">Active Console Session</span>
-                      </div>
-                      <span className="text-[11px] font-mono text-[#555]">PROMPT_READY</span>
+        {/* Console / Output area or Logs area (col-span-12 or col-span-8 on lg) */}
+        <main className="col-span-12 lg:col-span-8 flex flex-col gap-6 md:gap-8 min-h-[400px]">
+          <AnimatePresence mode="wait">
+            {activeTab === "console" ? (
+              <motion.div
+                key="console-tab"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col gap-6 md:gap-8 w-full"
+              >
+                {/* Input Buffer Card */}
+                <div className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-4">
+                  <div className="flex justify-between items-center border-b border-secondary/15 pb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="w-2.5 h-2.5 rounded-full bg-success"></span>
+                      <span className="text-[10px] uppercase tracking-widest text-secondary font-mono font-bold">Active Inference Shell</span>
                     </div>
-
-                    <div className="p-8 pb-10">
-                      <form onSubmit={handleGenerate} className="space-y-6">
-                        <div className="space-y-3">
-                          <label className="text-[10px] uppercase tracking-[0.2em] text-[#555] font-bold">Input Buffer</label>
-                          <textarea
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="Type prompt here..."
-                            rows={5}
-                            className="w-full p-4 bg-black/40 border border-[#222] rounded-xl focus:border-blue-500/50 outline-none transition-all text-sm font-mono leading-relaxed"
-                          />
-                        </div>
-                        {error && (
-                          <div className="p-3 bg-red-950/20 border border-red-900/30 text-red-400 text-xs rounded-lg flex items-center gap-2">
-                            <AlertCircle size={14} />
-                            {error}
-                          </div>
-                        )}
-                        <div className="flex justify-end">
-                          <button
-                            type="submit"
-                            disabled={loading || !prompt}
-                            className={`px-8 py-3 rounded-lg font-mono text-xs uppercase tracking-[0.2em] transition-all flex items-center gap-3 border shadow-lg ${loading || !prompt
-                                ? "bg-[#111] border-[#222] text-[#444] shadow-none"
-                                : "bg-blue-600/10 border-blue-500/30 text-blue-400 hover:bg-blue-600/20 shadow-blue-500/5"
-                              }`}
-                          >
-                            {loading ? <Loader2 size={16} className="animate-spin text-blue-500" /> : <Send size={16} />}
-                            Execute Query
-                          </button>
-                        </div>
-                      </form>
-                    </div>
+                    <span className="text-[10px] font-mono text-secondary bg-primary/20 px-2 py-0.5 rounded-lg border border-primary/20 font-semibold">PROMPT_READY</span>
                   </div>
 
-                  {(result || loading) && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-[#0e0e0e] border border-[#222] rounded-2xl overflow-hidden shadow-xl"
-                    >
-                      <div className="px-6 py-3 border-b border-[#222] flex items-center justify-between bg-[#131313]">
-                        <div className="flex items-center gap-3">
-                          <Sparkles size={14} className="text-purple-400" />
-                          <span className="text-[10px] uppercase tracking-widest text-[#888] font-mono">Inference Output</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-[10px] font-mono">
-                          <span className="text-[#555]">M_STAT: OK</span>
-                          <span className="text-[#555]">SYNC_COMPLETE</span>
-                        </div>
+                  <form onSubmit={handleGenerate} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold block font-mono">Input Query</label>
+                      <textarea
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="Type standard payload prompt or query message..."
+                        rows={5}
+                        className="w-full p-4 bg-bg-paper/40 border border-secondary/20 rounded-xl focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition-all text-sm font-mono text-text leading-relaxed placeholder-text/30"
+                      />
+                    </div>
+                    {error && (
+                      <div className="p-3 bg-danger/10 border border-danger/30 text-danger text-xs rounded-xl flex items-center gap-2 font-mono font-semibold">
+                        <AlertCircle size={14} />
+                        {error}
                       </div>
-                      <div className="p-8 bg-black/40 min-h-[120px]">
-                        {loading && !result ? (
-                          <div className="flex flex-col items-center justify-center p-8 text-dim space-y-4">
-                            <Loader2 className="animate-spin text-blue-500" size={24} />
-                            <span className="text-[10px] font-mono tracking-widest uppercase animate-pulse">Streaming Response...</span>
-                          </div>
-                        ) : (
-                          <div className="font-mono text-sm text-[#ccc] leading-relaxed whitespace-pre-wrap">
-                            {result}
-                          </div>
-                        )}
+                    )}
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={loading || !prompt}
+                        className="px-6 py-3 rounded-xl font-mono text-xs uppercase tracking-[0.2em] transition-all flex items-center gap-2 border border-secondary/20 shadow-sm bg-primary text-text font-bold hover:bg-[#F8C6AF] focus:ring-2 focus:ring-secondary/20 active:scale-95 disabled:bg-surface disabled:text-text/30 disabled:border-secondary/10 disabled:shadow-none"
+                      >
+                        {loading ? <Loader2 size={16} className="animate-spin text-text" /> : <Send size={16} />}
+                        Execute Query
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Inference Output Card */}
+                {(result || loading) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-4"
+                  >
+                    <div className="flex justify-between items-center border-b border-secondary/15 pb-3">
+                      <div className="flex items-center gap-3">
+                        <Sparkles size={14} className="text-secondary" />
+                        <span className="text-[10px] uppercase tracking-widest text-secondary font-mono font-bold">Inference Output</span>
                       </div>
-                    </motion.div>
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="logs-view"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="w-full max-w-5xl space-y-6"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-lg font-serif italic text-white">System Logs (Notion DB)</h2>
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-secondary">
+                        <span className="bg-bg-paper px-2 py-0.5 rounded-lg border border-secondary/15 font-semibold">M_STAT: OK</span>
+                        <span className="bg-bg-paper px-2 py-0.5 rounded-lg border border-secondary/15 font-semibold">SYNC_COMPLETE</span>
+                      </div>
+                    </div>
+                    <div className="min-h-[120px]">
+                      {loading && !result ? (
+                        <div className="flex flex-col items-center justify-center py-8 text-secondary space-y-3">
+                          <Loader2 className="animate-spin text-secondary" size={24} />
+                          <span className="text-[10px] font-mono tracking-widest uppercase animate-pulse text-secondary font-bold">Streaming Response...</span>
+                        </div>
+                      ) : (
+                        <div className="font-mono text-sm text-text bg-bg-paper/40 p-4 border border-secondary/20 rounded-xl leading-relaxed whitespace-pre-wrap shadow-sm">
+                          {result}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="logs-tab"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col gap-6 w-full"
+              >
+                {/* Logs Shell Container */}
+                <div className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-6">
+                  <div className="flex items-center justify-between border-b border-secondary/15 pb-3">
+                    <h2 className="text-lg font-bold font-sans text-text tracking-tight uppercase">System Logs (Notion DB)</h2>
                     <button
                       onClick={fetchLogs}
-                      className="text-[10px] uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2"
+                      className="text-[10px] uppercase font-mono tracking-widest text-text hover:bg-primary/20 transition-all flex items-center gap-2 border border-secondary/20 px-3 py-2 rounded-xl bg-surface shadow-sm active:scale-95 focus-visible:ring-2 focus-visible:ring-secondary/50 font-bold"
                     >
-                      Refresh Logs
+                      <RefreshCw size={12} />
+                      Refresh DB
                     </button>
                   </div>
 
                   <div className="space-y-4">
                     {logs.length === 0 ? (
-                      <div className="bg-[#111] border border-[#222] p-12 rounded-2xl text-center text-[#555] font-mono text-sm">
-                        No records found in database.
+                      <div className="bg-bg-paper/40 border border-secondary/25 p-8 rounded-xl text-center text-secondary/60 font-mono text-sm">
+                        No records found in Notion database.
                       </div>
                     ) : (
                       logs.map((log, index) => (
-                        <div key={index} className="bg-[#111] border border-[#222] rounded-xl overflow-hidden">
-                          <div className="px-4 py-2 bg-[#161616] border-b border-[#222] flex justify-between items-center text-[10px] font-mono">
-                            <span className="text-blue-400">ID: {log.id?.substring(0, 8)}...</span>
-                            <span className="text-[#555]">{new Date(log.created_time).toLocaleString()}</span>
+                        <div key={index} className="bg-bg-paper/30 border border-secondary/15 rounded-xl overflow-hidden shadow-sm hover:border-secondary/35 transition-all">
+                          <div className="px-4 py-2 bg-surface border-b border-secondary/15 flex justify-between items-center text-[10px] font-mono">
+                            <span className="text-secondary font-bold">ID: {log.id?.substring(0, 8)}...</span>
+                            <span className="text-secondary/60 font-semibold">{new Date(log.created_time).toLocaleString()}</span>
                           </div>
                           <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-[10px] uppercase tracking-widest text-[#444] mb-2 font-bold">Request Prompt</p>
-                              <div className="bg-black/30 p-3 rounded border border-[#222] text-xs font-mono text-[#888] line-clamp-3">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-mono uppercase tracking-widest text-secondary font-bold">Request Prompt</p>
+                              <div className="bg-surface p-3 rounded-lg border border-secondary/10 text-xs font-mono text-text/80 line-clamp-3 leading-relaxed">
                                 {log.properties?.Prompt?.title?.[0]?.plain_text || "N/A"}
                               </div>
                             </div>
-                            <div>
-                              <p className="text-[10px] uppercase tracking-widest text-[#444] mb-2 font-bold">Extracted Data</p>
-                              <div className="bg-black/30 p-3 rounded border border-[#222] text-xs font-mono text-[#aaa]">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-mono uppercase tracking-widest text-secondary font-bold">Extracted Data</p>
+                              <div className="bg-surface p-3 rounded-lg border border-secondary/10 text-xs font-mono text-text flex items-center flex-wrap gap-2 leading-relaxed">
                                 {log.properties?.Category?.select?.name && (
-                                  <span className={`inline-block px-2 py-0.5 rounded border text-[9px] mr-2 ${
+                                  <span className={`px-2 py-0.5 rounded-lg border text-[9px] uppercase font-bold font-mono ${
                                     log.properties.Category.select.name === 'error' 
-                                    ? "bg-red-500/10 text-red-400 border-red-500/20" 
-                                    : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                      ? "bg-danger/10 text-danger border-danger/35" 
+                                      : "bg-secondary/10 text-secondary border-secondary/35"
                                   }`}>
                                     {log.properties.Category.select.name}
                                   </span>
                                 )}
-                                {log.properties?.Title?.rich_text?.[0]?.plain_text || "Untitled"}
+                                <span className="text-text font-bold font-sans">
+                                  {log.properties?.Title?.rich_text?.[0]?.plain_text || "Untitled"}
+                                </span>
                                 {log.properties?.Value?.number !== null && (
-                                  <span className="ml-2 text-green-400">
+                                  <span className="text-success font-bold font-mono">
                                     ({log.properties.Value.number})
                                   </span>
                                 )}
@@ -265,24 +283,30 @@ export default function App() {
                       ))
                     )}
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </main>
       </div>
 
       {/* Footer */}
-      <footer className="shrink-0 bg-[#111111] border-t border-[#2a2a2a] px-8 py-3 flex items-center justify-between text-[10px] tracking-widest text-[#444] uppercase font-mono">
-        <div className="flex gap-4 items-center">
-          <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Senior Backend Architect</span>
+      <footer className="bg-surface border border-secondary/20 rounded-2xl p-4 shadow-bento flex flex-col sm:flex-row items-center justify-between text-[10px] tracking-widest text-secondary uppercase font-mono gap-2">
+        <div className="flex gap-4 items-center flex-wrap justify-center">
+          <span className="flex items-center gap-1.5 font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Senior Backend Architect
+          </span>
           <span className="opacity-40">|</span>
-          <span>Gemini Engine v2.0.4</span>
+          <span className="font-semibold">Gemini Engine v2.0.4</span>
         </div>
-        <div className="flex gap-6">
-          <span className="flex items-center gap-1.5"><span className="text-dim">LATENCY:</span> 42ms</span>
-          <span className="flex items-center gap-1.5"><span className="text-dim">MEMORY:</span> 124MB</span>
-          <span className="text-blue-500/50">SSL_ENCRYPTED</span>
+        <div className="flex gap-6 flex-wrap justify-center font-bold">
+          <span className="flex items-center gap-1.5">
+            <span className="text-secondary/60">LATENCY:</span> 42ms
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="text-secondary/60">MEMORY:</span> 124MB
+          </span>
+          <span className="text-text bg-primary/20 px-2 py-0.5 rounded-lg border border-primary/25 text-[9px]">SSL_ENCRYPTED</span>
         </div>
       </footer>
     </div>
