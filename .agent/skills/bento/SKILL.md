@@ -19,7 +19,7 @@ The bento box style is an innovative design approach that uses a grid layout to 
 ## Style Foundations
 - Visual style: modern, clean
 - Typography scale: 12/14/16/20/24/32 | Fonts: primary=Inter, display=Inter, mono=JetBrains Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
-- Color palette: primary, neutral, success, warning, danger | Tokens: primary=#FAD4C0, secondary=#80A1C1, success=#16A34A, warning=#D97706, danger=#DC2626, surface=#FFF5E6, text=#111827
+- Color palette: primary, neutral, success, warning, danger | Tokens (Light): primary=#FAD4C0, secondary=#80A1C1, surface=#FFF5E6, text=#111827 | Tokens (Dark): primary=#F8C6AF, secondary=#A2BDD6, surface=#1E2330, text=#F9FAFB
 - Spacing scale: 4/8/12/16/24/32
 
 

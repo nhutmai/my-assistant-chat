@@ -1,5 +1,6 @@
-- [x] Update index.css to load Bento fonts (Inter, JetBrains Mono) and configure `@theme` colors and styles
-- [x] Refactor App.tsx to use Bento modular grid layout and design (colors, rounded cards, soft periwinkle borders)
-- [x] Maintain strict spacing scale (4/8/12/16/24/32px)
-- [x] Ensure proper interactive states and high-contrast WCAG 2.2 AA compliance
-- [x] Verify compiling and linting of the application
+- [x] Update Bento design files (.agent/skills/bento/DESIGN.md & SKILL.md) to add dark mode specifications
+- [x] Update AGENTS.md UI/Design rules to include dark mode tokens and guidance
+- [x] Add dark mode overrides and toggle support in index.css
+- [x] Add dark mode state and toggle button in App.tsx
+- [x] Test compiling and building the application
+

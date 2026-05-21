@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Send, Loader2, Sparkles, AlertCircle, Terminal, ClipboardList, RefreshCw, Cpu, Activity, Info } from "lucide-react";
+import { Send, Loader2, Sparkles, AlertCircle, Terminal, ClipboardList, RefreshCw, Cpu, Activity, Info, Sun, Moon } from "lucide-react";
 import api from "./lib/api.js"; // Import centralized Axios client
 
 export default function App() {
@@ -11,6 +11,21 @@ export default function App() {
   const [error, setError] = useState("");
   const [appReady, setAppReady] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     setAppReady(true);
@@ -60,6 +75,13 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-4 flex-wrap">
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="flex items-center justify-center p-2 rounded-xl bg-surface border border-secondary/30 text-text hover:bg-primary/20 hover:border-primary/20 active:scale-95 transition-all shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 cursor-pointer"
+            aria-label="Toggle theme"
+          >
+            {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
           <span className="text-[10px] font-mono text-text bg-primary/30 border border-primary/40 px-3 py-1 rounded-xl font-bold">
             v2.1.0
           </span>

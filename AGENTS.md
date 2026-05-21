@@ -72,12 +72,15 @@ No dedicated automated test framework is currently configured. Before submitting
 The Bento design system must be applied automatically to every UI task—even when the user makes no mention of design or style:
 - **Silently Read Design Docs**: Always read `.agent/skills/bento/DESIGN.md` and `.agent/skills/bento/SKILL.md` before writing any UI/frontend code.
 - **Scope**: These rules are always active for all components, pages, layouts, and forms, without needing an explicit prompt.
-- **Bento Tokens Only**: Use only the designated colors: primary `#FAD4C0` (pastel peach), secondary `#80A1C1` (periwinkle slate blue), surface `#FFF5E6` (warm cream surface), and text `#111827` (charcoal text).
+- **Bento Tokens Only**: Use only the designated colors:
+  - **Light Mode**: primary `#FAD4C0` (pastel peach), secondary `#80A1C1` (periwinkle slate blue), surface `#FFF5E6` (warm cream surface), text `#111827` (charcoal text).
+  - **Dark Mode**: primary `#F8C6AF` (peach highlight), secondary `#A2BDD6` (light slate blue), surface `#1E2330` (dark slate surface), text `#F9FAFB` (cool off-white text).
 - **Spacing Scale**: Adhere strictly to the spacing scale `4/8/12/16/24/32`px (e.g., using Tailwind equivalents like `p-1`, `p-2`, `p-3`, `p-4`, `p-6`, `p-8`). Never use arbitrary values.
 - **Fonts**: Use `Inter` for all UI text and headings, and `JetBrains Mono` for all labels and code blocks.
 - **Layout & Sizing**: Use a modular bento grid layout with card-like blocks, clear visual hierarchy, soft spacing, and rounded corners (`rounded-2xl` for cards, `rounded-xl` for buttons/inputs).
 - **Interaction States**: Every interactive element (buttons, links, inputs, tabs, etc.) must explicitly define all of the following states: default, hover, focus-visible, active (e.g., active:scale-95), and disabled.
 - **Accessibility**: Ensure full WCAG 2.2 AA contrast compliance on all text and interactive elements.
+
 
 
 ## Forbidden Actions

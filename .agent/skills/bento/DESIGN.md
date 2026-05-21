@@ -1,14 +1,24 @@
 ---
 name: Bento
 colors:
-  primary: "#FAD4C0"
-  secondary: "#80A1C1"
-  success: "#16A34A"
-  warning: "#D97706"
-  danger: "#DC2626"
-  surface: "#FFF5E6"
-  text: "#111827"
-  neutral: "#FFF5E6"
+  light:
+    primary: "#FAD4C0"
+    secondary: "#80A1C1"
+    success: "#16A34A"
+    warning: "#D97706"
+    danger: "#DC2626"
+    surface: "#FFF5E6"
+    text: "#111827"
+    neutral: "#FFF5E6"
+  dark:
+    primary: "#F8C6AF"
+    secondary: "#A2BDD6"
+    success: "#22C55E"
+    warning: "#F59E0B"
+    danger: "#EF4444"
+    surface: "#1E2330"
+    text: "#F9FAFB"
+    neutral: "#1E2330"
 typography:
   h1:
     fontFamily: "Inter"
@@ -45,11 +55,16 @@ Modular grid layout with card-like blocks, clear hierarchy, soft spacing, and su
 
 ## Colors
 
-- **Primary (#FAD4C0):** Token from style foundations.
-- **Secondary (#80A1C1):** Token from style foundations.
-- **Success (#16A34A):** Token from style foundations.
-- **Warning (#D97706):** Token from style foundations.
-- **Danger (#DC2626):** Token from style foundations.
-- **Surface (#FFF5E6):** Token from style foundations.
-- **Text (#111827):** Token from style foundations.
-- **Neutral (#FFF5E6):** Derived from the surface token for official format compatibility.
+### Light Mode
+- **Primary (#FAD4C0):** Pastel peach for interaction elements.
+- **Secondary (#80A1C1):** Periwinkle slate blue for borders, icons, subtexts.
+- **Surface (#FFF5E6):** Soft warm cream surface.
+- **Text (#111827):** Charcoal body text.
+- **Background Paper (#F5EFEB):** Warm beige page background.
+
+### Dark Mode
+- **Primary (#F8C6AF):** High-contrast peach highlight.
+- **Secondary (#A2BDD6):** Soft slate blue for borders/highlights.
+- **Surface (#1E2330):** Deep dark slate card surface.
+- **Text (#F9FAFB):** Cool off-white text.
+- **Background Paper (#11151F):** Dark space background.

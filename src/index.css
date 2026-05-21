@@ -21,5 +21,18 @@
 @layer base {
   body {
     @apply bg-bg-paper text-text antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark {
+    --color-primary: #F8C6AF;
+    --color-secondary: #A2BDD6;
+    --color-surface: #1E2330;
+    --color-text: #F9FAFB;
+    --color-bg-paper: #11151F;
+
+    --shadow-bento: 0 4px 12px 0 rgba(0, 0, 0, 0.4), 0 1px 4px 0 rgba(0, 0, 0, 0.2);
+    --shadow-bento-hover: 0 8px 24px 0 rgba(0, 0, 0, 0.6), 0 2px 8px 0 rgba(0, 0, 0, 0.3);
   }
 }
+
