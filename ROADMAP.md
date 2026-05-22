@@ -1,90 +1,144 @@
-# Gemini Bridge: Phased Development Roadmap
+# Gemini Bridge — Product Roadmap
 
-**Version:** 1.0.0  
-**Status:** In Progress  
-**Architect:** Gemini CLI (Senior Backend Architect)
+> Cập nhật: 2026-05-22 | Trạng thái: MVP đã hoàn thiện, chuẩn bị hardening & scale
 
 ---
 
-## 📝 Tóm tắt trạng thái dự án (Project Status Summary)
-Gemini Bridge hiện là một middleware hoạt động ổn định ở mức **MVP (Minimum Viable Product)**. 
-- ✅ **Đã xong**: Tích hợp Groq AI, Notion SDK, Telegram Bot, và Messenger Webhook. Pipeline cơ bản (Message -> AI Extraction -> Notion Logging -> Response) đã hoạt động.
-- ⚠️ **Chưa bắt đầu**: Xác thực (Auth), Xử lý ngữ cảnh (Conversation Context), Bảo mật Webhook, và Giám sát chi phí.
-- 🔴 **Rủi ro**: Độ trễ từ Notion API ảnh hưởng đến trải nghiệm người dùng; Thiếu lớp Validation cho dữ liệu đầu vào.
+## 1. Đánh giá hiện trạng
+
+### Module đã hoàn thiện
+
+| Module | File | Trạng thái |
+|--------|------|-----------|
+| AI Generation (Groq) | `src/server/services/ai.service.ts` | ✅ Hoàn thiện |
+| Notion Logging | `src/server/services/notion.service.ts` | ✅ Hoàn thiện |
+| PostgreSQL Persistence | `src/server/services/postgres.service.ts` | ✅ Hoàn thiện (opt-in) |
+| Telegram Webhook | `src/server/services/telegram.service.ts` | ✅ Hoàn thiện |
+| Messenger Webhook | `src/server/services/messenger.service.ts` | ✅ Hoàn thiện |
+| Frontend (React 19) | `src/App.tsx` | ✅ Hoàn thiện |
+| Dark Mode | `src/index.css`, `src/App.tsx` | ✅ Hoàn thiện |
+| Axios Client | `src/lib/api.ts` | ✅ Hoàn thiện |
+| CI/CD Pipeline | `.github/workflows/ci.yml` | ✅ Hoàn thiện |
+| Docker / Vercel deploy | `Dockerfile`, `vercel.json` | ✅ Hoàn thiện |
+
+### Phần còn dang dở / thiếu
+
+| Vấn đề | Vị trí | Ghi chú |
+|--------|--------|---------|
+| Auth middleware | `src/server/middlewares/` (rỗng) | `jsonwebtoken` + `cookie-parser` đã cài nhưng chưa dùng |
+| Input validation | Không có file nào | Không có schema validation (zod/joi) |
+| Structured logging | Toàn bộ services | Chỉ dùng `console.log/error`, không có log aggregation |
+| Unit tests | Không có | Chỉ có `test-api.ts` manual |
+| Rate limiting | Không có middleware | Webhook endpoint hoàn toàn public |
+| CORS config | `src/server/index.ts` | Không thấy cấu hình explicit |
+| Request tracing | Toàn bộ | Không có correlation ID giữa các service |
+| Monitoring / APM | Không có | Không có uptime tracking, alerting |
+
+### Technical debt đáng chú ý
+
+1. **Dual persistence chưa đồng bộ**: PostgreSQL và Notion lưu song song nhưng không có fallback hay reconciliation nếu một bên fail.
+2. **AI prompt không có schema validation**: Controller nhận `prompt` bất kỳ, không sanitize hay giới hạn độ dài.
+3. **Error message leak**: `res.status(500).json({ error: err.message })` có thể lộ internal details.
+4. **PostgreSQL mặc định tắt**: Logic business quan trọng (lưu log) phụ thuộc vào biến môi trường tùy chọn — dễ bị bỏ sót khi deploy.
+5. **Notion Latency**: Query từ Notion chậm (>1s), ảnh hưởng trải nghiệm khi volume tăng.
+6. **Serverless Timeout**: Vercel Functions có giới hạn 10-60s — AI generation có thể vượt mức này.
 
 ---
 
-## 🛠 Lộ trình Phát triển
+## 2. Roadmap tính năng tiếp theo
 
-### Giai đoạn 1 — Cơ sở hạ tầng cốt lõi (Core Infrastructure)
-**Mục tiêu:** Chuẩn hóa pipeline dữ liệu và đảm bảo tính nhất quán giữa các nền tảng.
+> Ưu tiên: **Impact cao + Effort thấp** trước. Tính năng bảo mật & ổn định ưu tiên trên tính năng mới.
 
-- [x] ✅ `setup-base-proxy` — Cấu trúc Express server và định tuyến cơ bản.
-- [x] ✅ `ai-integration` — Tích hợp Groq SDK cho việc xử lý LLM.
-- [ ] `message-normalization` — Xây dựng lớp Middleware chuẩn hóa format tin nhắn từ các platform.
-    - *Tại sao:* Giúp logic nghiệp vụ không bị phụ thuộc vào API riêng biệt của Telegram/Messenger.
-    - **Tệp ảnh hưởng:** `src/server/services/message.normalizer.ts` (mới), `src/server/controllers/webhook.controller.ts`.
-- [ ] `request-validation` — ⚠️ Triển khai Zod validation cho mọi incoming webhook request.
-    - **Tệp ảnh hưởng:** `src/server/controllers/webhook.controller.ts`.
-
-**Tiêu chí hoàn thành:** Mọi tin nhắn từ mọi nền tảng đều đi qua một logic xử lý AI chung duy nhất.
-
----
-
-### Giai đoạn 2 — Độ tin cậy & Tính chính xác (Reliability & Correctness)
-**Mục tiêu:** Bảo mật endpoint và tăng khả năng chịu lỗi của hệ thống.
-
-- [ ] `webhook-security` — ⚠️ Xác thực chữ ký `X-Hub-Signature` (Messenger) và `Secret Token` (Telegram).
-    - **Tệp ảnh hưởng:** `src/server/controllers/webhook.controller.ts`.
-- [ ] `retry-logic` — 🔴 Triển khai Exponential Backoff cho các cuộc gọi đến Notion/AI.
-    - **Tệp ảnh hưởng:** `src/server/services/notion.service.ts`, `src/server/services/ai.service.ts`.
-- [ ] `error-boundary` — Xây dựng Global Error Handler trả về mã lỗi HTTP chuẩn và thông báo thân thiện.
-    - **Tệp ảnh hưởng:** `src/server/index.ts` (middleware).
-
-**Tiêu chí hoàn thành:** Hệ thống từ chối 100% request giả mạo và tự phục hồi sau các lỗi mạng tạm thời.
+| # | Tính năng | Mô tả ngắn | Module liên quan | Độ phức tạp | Ưu tiên |
+|---|-----------|-----------|-----------------|-------------|---------|
+| 1 | **Input Validation Middleware** | Validate schema các request với Zod trước khi vào controller | `middlewares/validate.ts`, routes | S | P1 |
+| 2 | **Structured Logging** | Thay `console.log` bằng `pino` — log JSON có level, timestamp, request ID | `services/`, `middlewares/logger.ts` | S | P1 |
+| 3 | **Rate Limiting** | Giới hạn request/IP cho `/api/ai/generate` và webhook endpoints | `middlewares/rateLimit.ts`, routes | S | P1 |
+| 4 | **CORS Configuration** | Explicit allowlist origin cho production | `src/server/index.ts` | S | P1 |
+| 5 | **Error Sanitization** | Không trả `err.message` raw, dùng error code thống nhất | `controllers/`, `server/index.ts` | S | P2 |
+| 6 | **Webhook Signature Verification** | Verify HMAC signature cho Telegram và Messenger webhook | `middlewares/webhookAuth.ts` | M | P2 |
+| 7 | **JWT Authentication** | Bật auth middleware (infrastructure đã có), bảo vệ `/api/ai/generate` và `/api/logs` | `middlewares/auth.ts`, routes | M | P2 |
+| 8 | **Retry Logic** | Exponential backoff cho Groq và Notion API calls | `ai.service.ts`, `notion.service.ts` | S | P2 |
+| 9 | **Unit Test Suite** | Test các service (ai, notion, telegram) với mock | `src/server/services/*.test.ts` | M | P2 |
+| 10 | **Health Check Endpoint** | `GET /health` trả về trạng thái các service (Notion, Postgres, Groq) | `routes/index.ts`, controllers | S | P3 |
+| 11 | **Log Pagination** | Thay limit cứng 20 bằng cursor-based pagination | `log.controller.ts`, `notion.service.ts` | M | P3 |
+| 12 | **Real-time Log Streaming** | SSE để push log mới về frontend không cần polling | `services/stream.service.ts`, `App.tsx` | M | P3 |
+| 13 | **Notion Dashboard Link** | Deep-link từ log entry trên UI về Notion page tương ứng | `App.tsx`, `notion.service.ts` | S | P3 |
+| 14 | **Cost Tracking** | Log số token tiêu thụ mỗi request vào Notion | `ai.service.ts` | S | P3 |
+| 15 | **Multi-language AI Response** | Tự động detect ngôn ngữ user và trả lời đúng ngôn ngữ | `ai.service.ts` | S | P3 |
+| 16 | **Async Webhook Processing** | Nhận request → trả 200 ngay → xử lý background → reply sau (tránh timeout Vercel) | `webhook.controller.ts` | M | P3 |
+| 17 | **Category Analytics UI** | Chart thống kê chi tiêu theo category trên frontend | `App.tsx`, new component | L | P4 |
+| 18 | **Multi-model Fallback** | Tự động chuyển sang Gemini nếu Groq bị lỗi | `ai.service.ts`, `.env` | M | P4 |
+| 19 | **Session / Context Management** | Lưu lịch sử hội thoại theo `senderId` làm context cho AI | `services/session.service.ts` (mới) | L | P4 |
 
 ---
 
-### Giai đoạn 3 — Lưu trữ & Lịch sử (Storage & History)
-**Mục tiêu:** Hỗ trợ hội thoại đa bước (Multi-turn conversation).
+## 3. Dependencies & Rủi ro
 
-- [ ] `context-retrieval` — ⚠️ Truy vấn lịch sử từ Notion để làm ngữ cảnh (prompt context) cho AI.
-    - **Tệp ảnh hưởng:** `src/server/services/ai.service.ts`, `src/server/services/notion.service.ts`.
-- [ ] `session-management` — Quản lý trạng thái hội thoại theo `senderId`.
-    - **Tệp ảnh hưởng:** `src/server/services/session.service.ts` (mới).
-- [ ] `notion-optimization` — Thiết kế lại database schema trong Notion để tối ưu hóa việc query theo User.
+### Dependency map
 
-**Tiêu chí hoàn thành:** AI có thể trả lời dựa trên thông tin người dùng đã gửi trong quá khứ.
+```
+P1: Input Validation ──────► P2: JWT Auth        (validation cần có trước để auth middleware compose được)
+P1: Structured Logging ─────► P2: Unit Tests      (cần logger mock trong tests)
+P1: Rate Limiting ──────────► P2: Webhook Sig.    (bảo vệ webhook layer by layer)
+P2: JWT Auth ───────────────► P4: Analytics UI    (UI cần biết user để filter data)
+P3: Log Pagination ─────────► P3: SSE Streaming   (pagination + streaming cần consistent cursor)
+P2: Retry Logic ────────────► P3: Async Webhook   (retry + async xử lý Vercel timeout)
+```
 
----
+### Rủi ro kỹ thuật cần giải quyết trước
 
-### Giai đoạn 4 — Khả năng giám sát & Vận hành (Observability)
-**Mục tiêu:** Quản trị chi phí và hiệu năng.
-
-- [ ] `cost-tracking` — ⚠️ Log số lượng token tiêu thụ của từng request vào Notion.
-    - **Tệp ảnh hưởng:** `src/server/services/ai.service.ts`.
-- [ ] `structured-logging` — Tích hợp Winston/Pino để quản lý log tập trung trên Vercel.
-- [ ] `rate-limiting` — Giới hạn số lượng request trên mỗi người dùng (API Throttling).
-
-**Tiêu chí hoàn thành:** Có báo cáo chi tiết về lượng token và chi phí API theo từng ngày/người dùng.
-
----
-
-### Giai đoạn 5 — Mở rộng quy mô & Tiện ích (Scale & Extension)
-**Mục tiêu:** Tối ưu hóa trải nghiệm người dùng và tính sẵn sàng cao.
-
-- [ ] `streaming-response` — ⚠️ Hỗ trợ trả về kết quả dạng stream (SSE) cho Frontend.
-    - **Tệp ảnh hưởng:** `src/server/controllers/ai.controller.ts`.
-- [ ] `multi-model-fallback` — Cơ chế tự động chuyển sang Gemini nếu Groq bị lỗi.
-- [ ] `auth-system` — Kích hoạt JWT Authentication cho các route quản trị dashboard.
-    - **Tệp ảnh hưởng:** `src/server/routes/index.ts`.
-
-**Tiêu chí hoàn thành:** Hệ thống hỗ trợ đa Model và bảo mật tuyệt đối cho Dashboard.
+| Rủi ro | Mức độ | Giải pháp |
+|--------|--------|-----------|
+| Dual persistence inconsistency | Cao | Thêm `Promise.allSettled` log chi tiết; cân nhắc event queue nhẹ (Bull/BullMQ) |
+| Groq API downtime không được xử lý | Cao | Thêm retry logic với exponential backoff trong `ai.service.ts` |
+| Serverless Timeout (Vercel 10-60s) | Cao | Async webhook: nhận → 200 ngay → xử lý background → reply sau |
+| Notion rate limit (3 req/s) | Trung bình | Queue request hoặc batch write khi volume tăng |
+| Auth disabled trong production | Trung bình | Bật JWT trước khi expose API ra ngoài internet |
+| No structured log → khó debug production | Trung bình | Migrate sang `pino` ngay, trước khi codebase lớn hơn |
+| Error message leak internal details | Trung bình | Sanitize tất cả error response, chỉ trả error code |
 
 ---
 
-## 🔴 Rủi ro kiến trúc & Giải pháp
-1. **Notion Latency**: Query lịch sử từ Notion rất chậm (>1s). 
-   *Giải pháp:* Cân nhắc dùng Redis làm Cache layer cho 5-10 tin nhắn gần nhất.
-2. **Serverless Timeout**: Vercel Functions có giới hạn thời gian (10s-60s). AI generation đôi khi vượt mức này.
-   *Giải pháp:* Dùng cơ chế Webhook Async (nhận request -> trả 200 ngay -> xử lý background -> gửi tin nhắn lại sau).
+## 4. Breakdown triển khai tính năng #1: Input Validation Middleware
+
+> **Mục tiêu**: Thêm Zod validation cho tất cả request body trước khi vào controller, trả lỗi 400 rõ ràng.
+> **Ước tính**: ~30 phút | **Dependency**: Không có
+
+### Chuẩn bị
+
+- [ ] Chạy `npm install zod`
+- [ ] Chạy `npm run lint` để xác nhận baseline sạch
+
+### Tạo file mới
+
+- [ ] `src/server/schemas/ai.schema.ts` — schema cho `POST /api/ai/generate`:
+  ```ts
+  export const aiGenerateSchema = z.object({
+    prompt: z.string().min(1).max(2000)
+  });
+  ```
+- [ ] `src/server/schemas/webhook.schema.ts` — schema cơ bản cho Telegram Update và Messenger Event
+- [ ] `src/server/middlewares/validate.ts` — factory function:
+  ```ts
+  export const validateBody = (schema: ZodSchema) => (req, res, next) => { ... }
+  ```
+
+### Chỉnh sửa file hiện có
+
+- [ ] `src/server/routes/index.ts` — thêm `validateBody(aiGenerateSchema)` vào `POST /api/ai/generate`
+- [ ] `src/server/routes/index.ts` — thêm validation cho `POST /api/webhook/telegram` và `POST /api/webhook/messenger`
+- [ ] `src/server/controllers/ai.controller.ts` — xóa manual type check nếu có, trust middleware đã validate
+- [ ] `API_DOCUMENTATION.md` — cập nhật error response 400 với format `{ error: "Validation failed", details: [...] }`
+
+### Kiểm tra
+
+- [ ] Test payload hợp lệ → 201 như cũ
+- [ ] Test `prompt` rỗng → 400 với `details`
+- [ ] Test `prompt` quá dài (>2000 chars) → 400
+- [ ] Test webhook với body sai format → 400, không crash server
+- [ ] Chạy `npm run lint` để đảm bảo type-safe
+
+---
+
+**Bước tiếp theo ngay bây giờ**: Cài `zod`, tạo `src/server/middlewares/validate.ts` và `src/server/schemas/ai.schema.ts`, sau đó wire vào route `/api/ai/generate` — đây là tính năng impact cao nhất với effort thấp nhất, ngay lập tức tăng độ ổn định và bảo mật cho toàn bộ API layer.
