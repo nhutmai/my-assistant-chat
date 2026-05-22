@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import logger from "../middlewares/logger.js";
 
 export class AIService {
   private groq: OpenAI;
@@ -36,7 +37,7 @@ export class AIService {
       const content = completion.choices[0].message.content || "{}";
       return JSON.parse(content);
     } catch (error) {
-      console.error("Groq API Error:", error);
+      logger.error({ err: error }, "Groq API error");
       throw new Error("Failed to generate AI content.");
     }
   }

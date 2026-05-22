@@ -1,4 +1,5 @@
 import pg from "pg";
+import logger from "../middlewares/logger.js";
 const { Pool } = pg;
 
 /**
@@ -22,7 +23,7 @@ export class PostgresService {
       });
 
       this.pool.on("error", (err) => {
-        console.warn("Unexpected error on idle PostgreSQL client", err);
+        logger.warn({ err }, "Unexpected error on idle PostgreSQL client");
       });
     }
   }
@@ -52,7 +53,7 @@ export class PostgresService {
       ];
       await this.pool.query(query, values);
     } catch (error) {
-      console.warn("PostgreSQL Save Warning: Failed to persist log entry.", error);
+      logger.warn({ err: error }, "PostgreSQL save failed");
     }
   }
 
@@ -73,7 +74,7 @@ export class PostgresService {
       const result = await this.pool.query(query);
       return result.rows;
     } catch (error) {
-      console.error("PostgreSQL Query Error: Failed to fetch logs.", error);
+      logger.error({ err: error }, "PostgreSQL query failed");
       return [];
     }
   }

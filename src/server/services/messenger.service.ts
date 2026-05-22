@@ -1,4 +1,5 @@
 import axios from "axios";
+import logger from "../middlewares/logger.js";
 
 export class MessengerService {
   private pageAccessToken: string;
@@ -6,7 +7,7 @@ export class MessengerService {
   constructor() {
     this.pageAccessToken = process.env.FB_PAGE_ACCESS_TOKEN || "";
     if (!this.pageAccessToken) {
-      console.warn("FB_PAGE_ACCESS_TOKEN is not defined.");
+      logger.warn("FB_PAGE_ACCESS_TOKEN is not defined.");
     }
   }
 
@@ -22,7 +23,7 @@ export class MessengerService {
         }
       );
     } catch (error: any) {
-      console.error("Facebook Send API Error:", error.response?.data || error.message);
+      logger.error({ err: error.response?.data || error.message }, "Facebook sendMessage failed");
     }
   }
 }

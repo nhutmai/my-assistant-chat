@@ -1,4 +1,5 @@
 import axios from "axios";
+import logger from "../middlewares/logger.js";
 
 export class TelegramService {
   private botToken: string;
@@ -9,7 +10,7 @@ export class TelegramService {
     this.baseUrl = `https://api.telegram.org/bot${this.botToken}`;
     
     if (!this.botToken) {
-      console.warn("TELEGRAM_BOT_TOKEN is not defined.");
+      logger.warn("TELEGRAM_BOT_TOKEN is not defined.");
     }
   }
 
@@ -23,7 +24,7 @@ export class TelegramService {
         parse_mode: "HTML"
       });
     } catch (error: any) {
-      console.error("Telegram Send API Error:", error.response?.data || error.message);
+      logger.error({ err: error.response?.data || error.message }, "Telegram sendMessage failed");
     }
   }
 
@@ -33,7 +34,7 @@ export class TelegramService {
       const response = await axios.post(`${this.baseUrl}/setWebhook`, { url });
       return response.data;
     } catch (error: any) {
-      console.error("Telegram SetWebhook Error:", error.response?.data || error.message);
+      logger.error({ err: error.response?.data || error.message }, "Telegram setWebhook failed");
       throw error;
     }
   }
