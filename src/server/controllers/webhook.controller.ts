@@ -4,6 +4,7 @@ import { notionService } from "../services/notion.service.js";
 import { postgresService } from "../services/postgres.service.js";
 import { messengerService } from "../services/messenger.service.js";
 import { telegramService } from "../services/telegram.service.js";
+import logger from "../middlewares/logger.js";
 
 export const verifyWebhook = (req: Request, res: Response) => {
   const mode = req.query["hub.mode"];
@@ -28,7 +29,6 @@ export const handleMessage = async (req: Request, res: Response) => {
 
   if (body.object === "page") {
     for (const entry of body.entry) {
-      // Duyệt qua tất cả các sự kiện messaging trong entry
       for (const webhookEvent of entry.messaging) {
         const senderId = webhookEvent.sender.id;
 
@@ -36,30 +36,27 @@ export const handleMessage = async (req: Request, res: Response) => {
           const messageText = webhookEvent.message.text;
 
           try {
-            // 1. Process with AI
             const aiResult = await aiService.generateContent(messageText);
 
-            // 2. Save to Notion and PostgreSQL
             await Promise.allSettled([
               notionService.saveLog(messageText, aiResult),
-              postgresService.saveLog(messageText, aiResult)
+              postgresService.saveLog(messageText, aiResult),
             ]);
 
-            // 3. Respond to user
             const responseText = `✅ Đã lưu thành công!\n- Loại: ${aiResult.category}\n- Nội dung: ${aiResult.title}\n- Giá trị: ${aiResult.value || 0}`;
             await messengerService.sendMessage(senderId, responseText);
           } catch (error: any) {
-            console.error("Webhook Processing Error:", error);
+            logger.error({ err: error, senderId }, "Messenger webhook processing failed");
+
             const errorData = {
               category: "error",
               title: `Error: ${error.message || "Unknown error"}`,
               value: 0,
-              date: new Date().toISOString()
+              date: new Date().toISOString(),
             };
-            // Ghi log lỗi vào cả hai hệ thống
             await Promise.allSettled([
               notionService.saveLog(messageText, errorData),
-              postgresService.saveLog(messageText, errorData)
+              postgresService.saveLog(messageText, errorData),
             ]);
             await messengerService.sendMessage(senderId, "❌ Có lỗi xảy ra khi xử lý tin nhắn của bạn.");
           }
@@ -68,7 +65,7 @@ export const handleMessage = async (req: Request, res: Response) => {
     }
     res.status(200).json({ status: "success", message: "EVENT_RECEIVED" });
   } else {
-    res.status(400).json({ status: "error", message: "Invalid webhook object, please check request body" });
+    res.status(400).json({ status: "error", message: "Invalid webhook object" });
   }
 };
 
@@ -76,41 +73,38 @@ export const handleTelegramMessage = async (req: Request, res: Response) => {
   const { message } = req.body;
 
   if (!message || !message.text) {
-    return res.status(400).json({ status: "error", message: "Invalid message format" });
+    res.status(400).json({ status: "error", message: "Invalid message format" });
+    return;
   }
 
   const chatId = message.chat.id;
   const messageText = message.text;
 
   try {
-    // 1. Process with AI
     const aiResult = await aiService.generateContent(messageText);
 
-    // 2. Save to Notion and PostgreSQL
     await Promise.allSettled([
       notionService.saveLog(messageText, aiResult),
-      postgresService.saveLog(messageText, aiResult)
+      postgresService.saveLog(messageText, aiResult),
     ]);
 
-    // 3. Respond to user
     const responseText = `<b>✅ Đã lưu thành công!</b>\n\n📌 <b>Loại:</b> ${aiResult.category}\n📝 <b>Nội dung:</b> ${aiResult.title}\n💰 <b>Giá trị:</b> ${aiResult.value || 0}\n📅 <b>Ngày:</b> ${aiResult.date}`;
     await telegramService.sendMessage(chatId, responseText);
 
     res.status(200).json({ status: "success", message: "Message processed" });
   } catch (error: any) {
-    console.error("Telegram Webhook Error:", error);
+    logger.error({ err: error, chatId }, "Telegram webhook processing failed");
 
     const errorData = {
       category: "error",
       title: `Telegram Error: ${error.message || "Unknown error"}`,
       value: 0,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
     };
 
-    // Log error to Notion and PostgreSQL
     await Promise.allSettled([
       notionService.saveLog(messageText, errorData),
-      postgresService.saveLog(messageText, errorData)
+      postgresService.saveLog(messageText, errorData),
     ]);
 
     await telegramService.sendMessage(chatId, "❌ Có lỗi xảy ra khi xử lý tin nhắn của bạn.");

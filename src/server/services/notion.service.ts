@@ -1,4 +1,5 @@
 import { Client } from "@notionhq/client";
+import logger from "../middlewares/logger.js";
 
 export class NotionService {
   private notion: Client;
@@ -9,7 +10,7 @@ export class NotionService {
     this.databaseId = process.env.NOTION_DATABASE_ID || "";
 
     if (!apiKey) {
-      console.warn("NOTION_API_KEY is not defined. Notion logging will be disabled.");
+      logger.warn("NOTION_API_KEY is not defined. Notion logging will be disabled.");
     }
 
     this.notion = new Client({ auth: apiKey });
@@ -54,7 +55,7 @@ export class NotionService {
         },
       });
     } catch (error) {
-      console.error("Notion Save Error:", error);
+      logger.error({ err: error }, "Notion save error");
     }
   }
 
@@ -74,7 +75,7 @@ export class NotionService {
       });
       return response.results;
     } catch (error) {
-      console.error("Notion Query Error:", error);
+      logger.error({ err: error }, "Notion query error");
       return [];
     }
   }
