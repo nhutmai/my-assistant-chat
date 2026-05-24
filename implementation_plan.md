@@ -6,7 +6,7 @@ Extend the Bento design system refactoring to support a user-toggled Dark Mode. 
 
 ### Design Documentation & Guidelines
 
-#### [MODIFY] [DESIGN.md](file:///Users/maiminhnhut/desktop/VibeWorkSpace/my-assistant-chat/.agent/skills/bento/DESIGN.md)
+#### [MODIFY] [DESIGN.md](file:///Users/maiminhnhut/desktop/VibeWorkSpace/my-assistant-chat/.agents/skills/bento/DESIGN.md)
 - Update color token specifications to include Dark Mode mappings:
   - **Light Mode**:
     - Primary: `#FAD4C0` (soft peach)
@@ -21,7 +21,7 @@ Extend the Bento design system refactoring to support a user-toggled Dark Mode. 
     - Text: `#F9FAFB` (cool off-white text)
     - Background Paper: `#11151F` (deep dark blue-gray paper)
 
-#### [MODIFY] [SKILL.md](file:///Users/maiminhnhut/desktop/VibeWorkSpace/my-assistant-chat/.agent/skills/bento/SKILL.md)
+#### [MODIFY] [SKILL.md](file:///Users/maiminhnhut/desktop/VibeWorkSpace/my-assistant-chat/.agents/skills/bento/SKILL.md)
 - Add guidelines for dark mode token selection, ensuring contrast and accessible colors are maintained when toggled.
 
 #### [MODIFY] [AGENTS.md](file:///Users/maiminhnhut/desktop/VibeWorkSpace/my-assistant-chat/AGENTS.md)
