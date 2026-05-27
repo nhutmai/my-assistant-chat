@@ -26,5 +26,5 @@ COPY --from=builder /app/build ./build
 
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -f http://localhost:3000 || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -f http://localhost:3000/health || exit 1
 CMD ["node", "build/server.js"]
