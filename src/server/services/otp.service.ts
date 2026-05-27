@@ -1,5 +1,6 @@
 import axios from "axios";
 import logger from "../middlewares/logger.js";
+import { getFacebookRecipientId } from "./facebook-recipient.service.js";
 import { getTelegramChatId } from "./telegram-recipient.service.js";
 
 interface OtpEntry {
@@ -39,11 +40,11 @@ async function sendViaTelegram(otp: string): Promise<void> {
 
 async function sendViaFacebook(otp: string): Promise<void> {
   const pageToken = process.env.FB_PAGE_ACCESS_TOKEN;
-  const recipientId = process.env.FB_OTP_RECIPIENT_ID;
+  const recipientId = await getFacebookRecipientId();
   const webhookUrl = process.env.FB_WEBHOOK_URL || "https://graph.facebook.com/v18.0/me/messages";
 
   if (!pageToken || !recipientId) {
-    throw new Error("FB_PAGE_ACCESS_TOKEN or FB_OTP_RECIPIENT_ID is not configured");
+    throw new Error("FB_PAGE_ACCESS_TOKEN is missing or no Facebook recipient has been registered yet");
   }
 
   await axios.post(
