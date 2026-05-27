@@ -4,6 +4,7 @@ import { notionService } from "../services/notion.service.js";
 import { postgresService } from "../services/postgres.service.js";
 import { messengerService } from "../services/messenger.service.js";
 import { telegramService } from "../services/telegram.service.js";
+import { rememberFacebookRecipientId } from "../services/facebook-recipient.service.js";
 import { rememberTelegramChatId } from "../services/telegram-recipient.service.js";
 import logger from "../middlewares/logger.js";
 
@@ -31,7 +32,10 @@ export const handleMessage = async (req: Request, res: Response) => {
   if (body.object === "page") {
     for (const entry of body.entry) {
       for (const webhookEvent of entry.messaging) {
-        const senderId = webhookEvent.sender.id;
+        const senderId = webhookEvent.sender?.id;
+        if (!senderId) continue;
+
+        await rememberFacebookRecipientId(senderId);
 
         if (webhookEvent.message && webhookEvent.message.text) {
           const messageText = webhookEvent.message.text;
