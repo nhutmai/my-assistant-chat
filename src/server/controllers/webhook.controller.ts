@@ -4,6 +4,7 @@ import { notionService } from "../services/notion.service.js";
 import { postgresService } from "../services/postgres.service.js";
 import { messengerService } from "../services/messenger.service.js";
 import { telegramService } from "../services/telegram.service.js";
+import { rememberTelegramChatId } from "../services/telegram-recipient.service.js";
 import logger from "../middlewares/logger.js";
 
 export const verifyWebhook = (req: Request, res: Response) => {
@@ -72,12 +73,19 @@ export const handleMessage = async (req: Request, res: Response) => {
 export const handleTelegramMessage = async (req: Request, res: Response) => {
   const { message } = req.body;
 
-  if (!message || !message.text) {
+  if (!message?.chat?.id) {
     res.status(400).json({ status: "error", message: "Invalid message format" });
     return;
   }
 
   const chatId = message.chat.id;
+  await rememberTelegramChatId(chatId);
+
+  if (!message.text) {
+    res.status(200).json({ status: "success", message: "Telegram chat registered" });
+    return;
+  }
+
   const messageText = message.text;
 
   try {
