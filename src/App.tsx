@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Send, Loader2, Sparkles, AlertCircle, Terminal, ClipboardList, RefreshCw, Cpu, Activity, Info, Sun, Moon } from "lucide-react";
-import api from "./lib/api.js"; // Import centralized Axios client
+import { Send, Loader2, Sparkles, AlertCircle, Terminal, ClipboardList, RefreshCw, Cpu, Activity, Info, Sun, Moon, LogOut } from "lucide-react";
+import api from "./lib/api.js";
+import LoginPage from "./pages/LoginPage.js";
 
-export default function App() {
+function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState<"console" | "logs">("console");
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState("");
@@ -49,7 +50,7 @@ export default function App() {
     try {
       const response = await api.post("/api/ai/generate", { prompt });
       setResult(JSON.stringify(response.data?.data, null, 2));
-      fetchLogs(); // Refresh logs after generation
+      fetchLogs();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to generate content");
     } finally {
@@ -81,6 +82,14 @@ export default function App() {
             aria-label="Toggle theme"
           >
             {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-1.5 p-2 rounded-xl bg-surface border border-secondary/30 text-text hover:bg-danger/10 hover:border-danger/30 hover:text-danger active:scale-95 transition-all shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-secondary/50 cursor-pointer"
+            aria-label="Logout"
+            title="Đăng xuất"
+          >
+            <LogOut size={16} />
           </button>
           <span className="text-[10px] font-mono text-text bg-primary/30 border border-primary/40 px-3 py-1 rounded-xl font-bold">
             v2.1.0
@@ -145,7 +154,7 @@ export default function App() {
               </div>
               <div>
                 <span className="text-secondary font-bold">AUTH</span>
-                <span className="text-text/75 ml-2 font-semibold">= DISABLED</span>
+                <span className="text-text/75 ml-2 font-semibold">= JWT</span>
               </div>
             </div>
             <div className="text-[10px] text-secondary font-semibold font-mono flex items-center gap-1.5 pt-2">
@@ -283,8 +292,8 @@ export default function App() {
                               <div className="bg-surface p-3 rounded-lg border border-secondary/10 text-xs font-mono text-text flex items-center flex-wrap gap-2 leading-relaxed">
                                 {log.properties?.Category?.select?.name && (
                                   <span className={`px-2 py-0.5 rounded-lg border text-[9px] uppercase font-bold font-mono ${
-                                    log.properties.Category.select.name === 'error' 
-                                      ? "bg-danger/10 text-danger border-danger/35" 
+                                    log.properties.Category.select.name === 'error'
+                                      ? "bg-danger/10 text-danger border-danger/35"
                                       : "bg-secondary/10 text-secondary border-secondary/35"
                                   }`}>
                                     {log.properties.Category.select.name}
@@ -333,4 +342,24 @@ export default function App() {
       </footer>
     </div>
   );
+}
+
+export default function App() {
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("auth_token"));
+
+  const handleLogin = (newToken: string) => {
+    localStorage.setItem("auth_token", newToken);
+    setToken(newToken);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("auth_token");
+    setToken(null);
+  };
+
+  if (!token) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  return <Dashboard onLogout={handleLogout} />;
 }
