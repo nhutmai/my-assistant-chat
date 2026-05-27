@@ -5,6 +5,11 @@ import * as authController from "../controllers/auth.controller.js";
 
 const router = Router();
 
+const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+});
+
 const otpRequestSchema = z.object({
   channel: z.enum(["facebook", "telegram"]),
   username: z.string().min(1),
@@ -16,6 +21,7 @@ const otpVerifySchema = z.object({
   channel: z.enum(["facebook", "telegram"]),
 });
 
+router.post("/login", validateBody(loginSchema), authController.passwordLogin);
 router.post("/otp/request", validateBody(otpRequestSchema), authController.otpRequest);
 router.post("/otp/verify", validateBody(otpVerifySchema), authController.otpVerify);
 
