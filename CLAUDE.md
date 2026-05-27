@@ -35,6 +35,7 @@ Always apply the Bento design system to all UI tasks:
 ## Workflow
 - **Commit**: Keep messages short and imperative.
 - **Verification**: Manually test flows using `npm run dev` before submitting.
+- **Documentation**: After completing any feature, bug fix, integration, API change, configuration change, or workflow change, update all related documentation before considering the task done. Review `README.md`, `ARCHITECTURE.md`, `API_DOCUMENTATION.md`, `ROADMAP.md`, `.env.example`, and any task-specific docs affected by the change. When documentation files are updated and the task output includes a browsable documentation artifact, regenerate `markdown-docs.html`; otherwise, keep source Markdown files as the documentation source of truth. If no documentation update is needed, explicitly note that docs were reviewed and why no change was required.
 - **Forbidden**: Do not hardcode secrets, do not put logic in controllers, do not omit `.js` imports in server files.
 
 <!-- gitnexus:start -->

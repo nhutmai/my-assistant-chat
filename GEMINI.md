@@ -53,6 +53,13 @@ This is a TypeScript React/Vite app with a Node/Express API layer.
 ## Testing Guidelines
 No dedicated automated test framework is currently configured. Before submitting changes, run `npm run lint` and manually verify affected flows with `npm run dev`. For API changes, exercise the relevant endpoint, for example `POST /api/ai/generate` or webhook routes. If adding tests, place them near the code they cover or under a clear `tests/` directory, and document the new command in `package.json`.
 
+## Documentation Update Rules
+- **Update Relevant Docs After Changes**: After completing any feature, bug fix, integration, API change, configuration change, or workflow change, update the related documentation before considering the task done.
+- **Keep Docs In Sync**: Review and update `README.md`, `ARCHITECTURE.md`, `API_DOCUMENTATION.md`, `ROADMAP.md`, `.env.example`, and any task-specific docs that are affected by the change.
+- **Document User-Facing Behavior**: For new or changed UI flows, endpoints, environment variables, setup steps, deployment steps, or operational procedures, include clear usage notes and examples where helpful.
+- **Markdown HTML Export**: When documentation files are updated and the task output includes a browsable documentation artifact, regenerate `markdown-docs.html`. Otherwise, keep source Markdown files as the documentation source of truth.
+- **No Stale Docs**: If no documentation update is needed, explicitly note that the docs were reviewed and why no change was required.
+
 ## Security, Environment & Configuration
 - **Key Registry**: Required keys include `GROQ_API_KEY`, `NOTION_API_KEY`, `NOTION_DATABASE_ID`, `TELEGRAM_BOT_TOKEN`, `FB_PAGE_ACCESS_TOKEN`, and `FB_VERIFY_TOKEN`.
 - **Access Pattern**: Retrieve all secrets via `process.env` on the backend only; never expose these to the client.
@@ -66,6 +73,7 @@ No dedicated automated test framework is currently configured. Before submitting
 ## Before Every Task
 - **Run Linting**: Execute `npm run lint` (`tsc --noEmit`) and fix all type errors before proceeding.
 - **Manual Verification**: Manually test the affected endpoint or UI flow to ensure functional correctness.
+- **Documentation Review**: Check whether the completed change requires updates to project documentation, and make those updates before finishing.
 - **Secrets Audit**: Verify that no API keys or personal credentials have been accidentally added to the source code.
 
 ## UI / Design Rules
