@@ -152,9 +152,12 @@ The app is configured for Vercel through `vercel.json` and `api/index.ts`. GitHu
 
 Store production secrets in the deployment platform or CI secret store, not in source control.
 
-## More Documentation
+## Documentation Site
 
-- [ARCHITECTURE.md](ARCHITECTURE.md)
-- [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-- [ROADMAP.md](ROADMAP.md)
-- [cicd-local-guide.md](cicd-local-guide.md)
+Markdown documentation can be rendered as a static HTML site with VitePress.
+
+- `npm run docs:dev`: start the local VitePress docs server
+- `npm run docs:build`: generate static HTML into `docs/.vitepress/dist`
+- `npm run docs:preview`: preview the generated static docs build
+
+The VitePress source lives in `docs/` and includes the existing root Markdown files so the project documentation remains centralized.
