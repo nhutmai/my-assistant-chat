@@ -53,6 +53,16 @@ Common shortcuts are available through `Makefile`:
 - `make docker-logs`: tail Docker logs
 - `make docker-db-shell`: open a `psql` session inside the PostgreSQL container
 
+## Documentation Site
+
+Markdown documentation can be rendered as a static HTML site with VitePress.
+
+- `npm run docs:dev`: start the local VitePress docs server
+- `npm run docs:build`: generate static HTML into `docs/.vitepress/dist`
+- `npm run docs:preview`: preview the generated static docs build
+
+The VitePress source lives in `docs/` and includes the existing root Markdown files so the project documentation remains centralized.
+
 ## GitHub Deploy to VPS
 
 The GitHub Actions workflow deploys to a VPS over SSH on pushes to `main`.
