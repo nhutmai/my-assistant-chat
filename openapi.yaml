@@ -1,0 +1,777 @@
+openapi: 3.0.3
+info:
+  title: Gemini Bridge API
+  version: 0.0.0
+  description: Gemini Bridge exposes AI generation, activity logs, authentication, health checks, and messaging platform webhook endpoints. It connects Groq/OpenAI-compatible inference with Notion logging, optional PostgreSQL persistence, Telegram, and Facebook Messenger.
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+tags:
+  - name: Health
+    description: Service health and runtime metadata.
+  - name: Auth
+    description: Password and OTP authentication endpoints.
+  - name: AI
+    description: AI generation and logging endpoints.
+  - name: Logs
+    description: Activity log retrieval endpoints.
+  - name: Webhooks
+    description: Messaging platform webhook verification and event handling.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Check service health
+      description: Returns a simple health payload with the current server timestamp and package version.
+      tags:
+        - Health
+      security: []
+      responses:
+        "200":
+          description: Service is running.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - timestamp
+                  - version
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2026-05-29T00:00:00.000Z"
+                  version:
+                    type: string
+                    example: 0.0.0
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Internal Server Error
+  /api/auth/login:
+    post:
+      operationId: passwordLogin
+      summary: Login with password
+      description: Verifies the configured administrator username and password, then returns a JWT that expires in 24 hours.
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 1
+                  example: admin
+                password:
+                  type: string
+                  minLength: 1
+                  format: password
+                  example: your_admin_password
+      responses:
+        "200":
+          description: Login succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                  - expiresIn
+                properties:
+                  token:
+                    type: string
+                    description: JWT bearer token.
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  expiresIn:
+                    type: string
+                    example: 24h
+        "400":
+          description: Request body validation failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - details
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Validation failed
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: username
+                        message:
+                          type: string
+                          example: Required
+        "401":
+          description: Username or password is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Sai username hoặc password
+        "500":
+          description: Authentication environment variables are missing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server misconfiguration: JWT_SECRET missing"
+  /api/auth/otp/request:
+    post:
+      operationId: requestOtp
+      summary: Request OTP code
+      description: Generates an OTP for the given username and sends it through Telegram or Facebook Messenger.
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - channel
+                - username
+              properties:
+                channel:
+                  type: string
+                  enum:
+                    - facebook
+                    - telegram
+                  example: telegram
+                username:
+                  type: string
+                  minLength: 1
+                  example: admin
+      responses:
+        "200":
+          description: OTP was sent.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: OTP đã được gửi
+        "400":
+          description: Request body validation failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - details
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Validation failed
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: channel
+                        message:
+                          type: string
+                          example: Invalid option
+        "502":
+          description: OTP delivery failed through the selected channel.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Gửi OTP thất bại: TELEGRAM_BOT_TOKEN missing"
+  /api/auth/otp/verify:
+    post:
+      operationId: verifyOtp
+      summary: Verify OTP code
+      description: Validates a six-digit OTP for the selected channel and returns a JWT when the code is valid.
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - otp
+                - channel
+              properties:
+                username:
+                  type: string
+                  minLength: 1
+                  example: admin
+                otp:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+                  pattern: "^[0-9]{6}$"
+                  example: "123456"
+                channel:
+                  type: string
+                  enum:
+                    - facebook
+                    - telegram
+                  example: telegram
+      responses:
+        "200":
+          description: OTP verification succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                  - expiresIn
+                properties:
+                  token:
+                    type: string
+                    description: JWT bearer token.
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  expiresIn:
+                    type: string
+                    example: 24h
+        "400":
+          description: Request body validation failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - details
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Validation failed
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: otp
+                        message:
+                          type: string
+                          example: Too small
+        "401":
+          description: OTP is invalid or expired.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: OTP không đúng hoặc đã hết hạn
+        "500":
+          description: JWT signing configuration is missing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server misconfiguration: JWT_SECRET missing"
+  /api/ai/generate:
+    post:
+      operationId: generateAIContent
+      summary: Generate AI content
+      description: Sends a prompt to the AI service, stores the generated structured result in Notion and optional PostgreSQL storage, then returns the generated data.
+      tags:
+        - AI
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: JWT bearer token returned by the login or OTP verification endpoint.
+          schema:
+            type: string
+            example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                  example: Ăn sáng phở thìn 50k
+      responses:
+        "201":
+          description: Content generated and logged successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - data
+                  - message
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      category:
+                        type: string
+                        example: chi tiêu
+                      title:
+                        type: string
+                        example: Ăn sáng phở thìn
+                      value:
+                        type: number
+                        example: 50000
+                      date:
+                        type: string
+                        example: "2024-05-20"
+                    additionalProperties: true
+                  message:
+                    type: string
+                    example: Content generated and logged successfully
+        "400":
+          description: Prompt validation failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - details
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Validation failed
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: prompt
+                        message:
+                          type: string
+                          example: Prompt cannot be empty
+        "401":
+          description: Bearer token is missing or expired.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unauthorized
+        "403":
+          description: Bearer token is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Forbidden
+        "500":
+          description: AI generation or persistence failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Internal Server Error
+  /api/logs:
+    get:
+      operationId: getLogs
+      summary: List activity logs
+      description: Retrieves recent log records from the configured Notion database.
+      tags:
+        - Logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: JWT bearer token returned by the login or OTP verification endpoint.
+          schema:
+            type: string
+            example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        "200":
+          description: Logs retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - data
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                    example:
+                      - object: page
+                        id: notion-page-id
+                        properties: {}
+        "401":
+          description: Bearer token is missing or expired.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unauthorized
+        "403":
+          description: Bearer token is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Forbidden
+        "500":
+          description: Log retrieval failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Failed to fetch logs
+  /api/webhook/messenger:
+    get:
+      operationId: verifyMessengerWebhook
+      summary: Verify Messenger webhook
+      description: Verifies the Facebook Messenger webhook subscription by checking hub query parameters against the configured verify token.
+      tags:
+        - Webhooks
+      security: []
+      parameters:
+        - name: hub.mode
+          in: query
+          required: true
+          schema:
+            type: string
+            example: subscribe
+        - name: hub.verify_token
+          in: query
+          required: true
+          schema:
+            type: string
+            example: your_custom_verify_token
+        - name: hub.challenge
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "123456789"
+      responses:
+        "200":
+          description: Verification succeeded and returns the raw challenge value.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "123456789"
+        "400":
+          description: Required query parameters are missing.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: fail to verify webhook
+        "403":
+          description: Verify token did not match.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Forbidden
+    post:
+      operationId: handleMessengerEvents
+      summary: Handle Messenger events
+      description: Receives Facebook Messenger webhook events, processes text messages through the AI service, logs results, and replies through Messenger Send API.
+      tags:
+        - Webhooks
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - object
+                - entry
+              properties:
+                object:
+                  type: string
+                  example: page
+                entry:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+                  example:
+                    - messaging:
+                        - sender:
+                            id: "123456789"
+                          message:
+                            text: Ăn sáng phở thìn 50k
+              additionalProperties: true
+      responses:
+        "200":
+          description: Event was received and processed or ignored.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: EVENT_RECEIVED
+        "400":
+          description: Webhook body validation failed or object is invalid.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Invalid webhook object
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: entry
+                        message:
+                          type: string
+                          example: Required
+        "500":
+          description: Unexpected server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Internal Server Error
+  /api/webhook/telegram:
+    post:
+      operationId: handleTelegramUpdates
+      summary: Handle Telegram updates
+      description: Receives Telegram update objects, remembers the chat id, processes text messages through the AI service, logs results, and replies to the chat.
+      tags:
+        - Webhooks
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - update_id
+              properties:
+                update_id:
+                  type: integer
+                  example: 123456
+                message:
+                  type: object
+                  properties:
+                    chat:
+                      type: object
+                      required:
+                        - id
+                      properties:
+                        id:
+                          oneOf:
+                            - type: string
+                            - type: number
+                          example: 123456789
+                    text:
+                      type: string
+                      example: Ăn sáng phở thìn 50k
+              additionalProperties: true
+      responses:
+        "200":
+          description: Telegram update was accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Message processed
+        "400":
+          description: Telegram update body is invalid or missing chat id.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Invalid message format
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: update_id
+                        message:
+                          type: string
+                          example: Required
+        "500":
+          description: Telegram message processing failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: Internal Server Error
