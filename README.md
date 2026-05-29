@@ -1,69 +1,163 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Gemini Bridge
 
-# Run and deploy your AI Studio app
+Gemini Bridge is a full-stack TypeScript app that connects AI inference with messaging channels and persistent logging. It exposes a React/Vite frontend, an Express API layer, Telegram and Messenger webhooks, and Notion-backed interaction logs.
 
-This contains everything you need to run your app locally.
+## Tech Stack
 
-View your app in AI Studio: https://ai.studio/apps/5d1cd24a-6bda-4b98-acdb-af0ba83d2373
+- React 19, Vite, Tailwind CSS v4, Lucide React, Motion
+- Node.js, Express, TypeScript
+- Groq/OpenAI-compatible AI client
+- Notion SDK for activity logging
+- Telegram Bot API and Facebook Messenger Graph API
+- Optional PostgreSQL service for future persistence work
+- VitePress for static documentation generated from Markdown
 
-## Run Locally
+## Project Structure
 
-**Prerequisites:**  Node.js
+```text
+api/                  Vercel serverless entry point
+docs/                 VitePress documentation source
+scratch/              Utility scripts, including webhook setup helpers
+src/                  React frontend and Express backend source
+src/server/routes/    API route definitions
+src/server/controllers/ Request validation and response formatting
+src/server/services/  AI, Notion, Telegram, and Messenger integrations
+server.ts             Local Express + Vite development server
+```
 
+## Prerequisites
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- Node.js 20 or newer
+- npm
+- Optional: Docker and Docker Compose for containerized local runs
+
+## Environment Setup
+
+Create a local environment file from the template:
+
+```bash
+cp .env.example .env
+```
+
+Fill in the values needed for the flows you want to run:
+
+- `GROQ_API_KEY`: Groq API key for AI inference
+- `NOTION_API_KEY`: Notion integration token
+- `NOTION_DATABASE_ID`: Notion database used for logs
+- `TELEGRAM_BOT_TOKEN`: Telegram bot token
+- `FB_PAGE_ACCESS_TOKEN`: Facebook page access token
+- `FB_VERIFY_TOKEN`: Messenger webhook verification token
+- `JWT_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`: API authentication values
+
+Secrets must stay in local `.env` files or deployment environment variables. Do not commit real credentials.
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the local app:
+
+```bash
+npm run dev
+```
+
+The app runs through `server.ts`, which mounts the Express API and Vite middleware. By default it listens on `http://localhost:3000`.
+
+## Common Commands
+
+```bash
+npm run dev          # Start local Express + Vite development server
+npm run build        # Build frontend assets into dist/
+npm run build:server # Compile the production server into build/
+npm run build:prod   # Build frontend and server
+npm run start        # Run the compiled production server
+npm run preview      # Preview the Vite frontend build
+npm run lint         # Run TypeScript validation
+npm run test         # Run Vitest tests
+npm run clean        # Remove dist/
+```
+
+Makefile shortcuts are also available:
+
+```bash
+make help
+make install
+make dev
+make lint
+make build
+make docker-up
+make docker-down
+```
+
+## API Routes
+
+Routes are mounted under `/api`:
+
+- `POST /api/auth/login`
+- `POST /api/auth/otp/request`
+- `POST /api/auth/otp/verify`
+- `POST /api/ai/generate`
+- `GET /api/logs`
+- `GET /api/webhook/messenger`
+- `POST /api/webhook/messenger`
+- `POST /api/webhook/telegram`
+
+See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for request and response details.
+
+## Documentation Site
+
+Markdown documentation is rendered into static HTML with VitePress. The VitePress source lives in `docs/` and includes the project docs, agent rule files, and skill docs from the repository.
+
+```bash
+npm run docs:dev      # Start the local VitePress docs server
+npm run docs:build    # Generate static HTML into docs/.vitepress/dist
+npm run docs:preview  # Preview the generated docs build
+```
+
+The generated `docs/.vitepress/dist/` directory is ignored by git and can be produced locally or in CI with `npm run docs:build`.
 
 ## Docker
 
-Docker support is set up in an isolated way so the current app flow does not need to change.
+Docker support runs the app with a PostgreSQL 16 service:
 
-1. Create your Docker env file:
-   `make env-docker`
-2. Start the app and PostgreSQL:
-   `make docker-up`
-3. Open the app:
-   `http://localhost:3000`
+```bash
+make docker-up
+make docker-logs
+make docker-down
+```
 
-Services included:
+Services:
 
-- `app`: builds the current Vite + Express app and runs it in production mode
-- `postgres`: provides a PostgreSQL 16 instance with a persistent Docker volume
+- `app`: builds and runs the Vite + Express app in production mode
+- `postgres`: provides a persistent PostgreSQL container
 
-Notes:
+PostgreSQL is optional for the current application flow. Set `ENABLE_POSTGRES_STORAGE=true` when using Postgres-backed behavior.
 
-- The repository does not currently use PostgreSQL in application code yet. The database is provisioned and ready for future integration.
-- `DATABASE_URL` is injected into the app container automatically by `docker-compose.yml`.
+## Deployment
 
-## Makefile
+The app is configured for Vercel through `vercel.json` and `api/index.ts`. GitHub Actions deployment to a VPS is also documented in the repository workflow files and expects environment-specific secrets such as:
 
-Common shortcuts are available through `Makefile`:
+- `VPS_HOST`
+- `VPS_PORT`
+- `VPS_USER`
+- `VPS_SSH_KEY`
+- `VPS_APP_PATH`
+- `VPS_REPO_URL`
+- `VPS_REPO_BRANCH`
+- `APP_ENV_FILE`
 
-- `make help`: show all available commands
-- `make dev`: run the local development server
-- `make lint`: run TypeScript validation
-- `make build`: build frontend assets
-- `make docker-up`: build and start Docker services
-- `make docker-down`: stop Docker services
-- `make docker-logs`: tail Docker logs
-- `make docker-db-shell`: open a `psql` session inside the PostgreSQL container
+Store production secrets in the deployment platform or CI secret store, not in source control.
 
-## GitHub Deploy to VPS
+## Documentation Site
 
-The GitHub Actions workflow deploys to a VPS over SSH on pushes to `main`.
+Markdown documentation can be rendered as a static HTML site with VitePress.
 
-Required GitHub Secrets:
+- `npm run docs:dev`: start the local VitePress docs server
+- `npm run docs:build`: generate static HTML into `docs/.vitepress/dist`
+- `npm run docs:preview`: preview the generated static docs build
 
-- `VPS_HOST`: VPS public IP or domain
-- `VPS_PORT`: SSH port, usually `22`
-- `VPS_USER`: SSH username
-- `VPS_SSH_KEY`: private SSH key used by GitHub Actions
-- `VPS_APP_PATH`: absolute app path on the VPS, for example `/opt/my-assistant-chat`
-- `VPS_REPO_URL`: Git repository SSH/HTTPS URL
-- `VPS_REPO_BRANCH`: branch to deploy, usually `main`
-- `APP_ENV_FILE`: full `.env` file content written on the VPS before `docker compose up`
+The VitePress source lives in `docs/` and includes the existing root Markdown files so the project documentation remains centralized.
