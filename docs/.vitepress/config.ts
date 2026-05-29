@@ -30,16 +30,6 @@ export default defineConfig({
         ],
       },
       {
-        text: "Workflow Notes",
-        items: [
-          { text: "CI/CD Local Guide", link: "/cicd-local-guide" },
-          { text: "Implementation Plan", link: "/implementation-plan" },
-          { text: "Walkthrough", link: "/walkthrough" },
-          { text: "Task Notes", link: "/task" },
-          { text: "GitNexus Notes", link: "/gitnexus" },
-        ],
-      },
-      {
         text: "Agent Rules",
         items: [
           { text: "AGENTS", link: "/agent-rules" },
