@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, Flame, AlertTriangle, Save, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Flame, AlertTriangle, Save, CheckCircle, Loader2 } from "lucide-react";
+import api from "../lib/api.js";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -10,14 +11,7 @@ interface VoteRecord {
   history: string[];
 }
 
-interface IdentityVotesData {
-  identity: string;
-  votes: VoteRecord[];
-}
-
 // ── Helpers ────────────────────────────────────────────────────────
-
-const STORAGE_KEY = "identity_votes";
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
@@ -50,81 +44,138 @@ function shouldWarnNeverMissTwice(history: string[]): boolean {
   return set.has(twoDaysAgo) && !set.has(yesterday) && !set.has(todayStr);
 }
 
-function loadData(): IdentityVotesData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as IdentityVotesData;
-  } catch { /* ignore */ }
-  return { identity: "", votes: [] };
-}
-
-function saveData(data: IdentityVotesData): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
 // ── Component ──────────────────────────────────────────────────────
 
 export default function IdentityVotes() {
-  const [data, setData] = useState<IdentityVotesData>(loadData);
-  const [identityDraft, setIdentityDraft] = useState(data.identity);
+  const [identity, setIdentity] = useState("");
+  const [identityDraft, setIdentityDraft] = useState("");
+  const [votes, setVotes] = useState<VoteRecord[]>([]);
   const [identitySaved, setIdentitySaved] = useState(false);
   const [newVoteName, setNewVoteName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Persist whenever data changes
+  // ── Fetch data on mount ──
+
   useEffect(() => {
-    saveData(data);
-  }, [data]);
+    let cancelled = false;
+
+    async function fetchData() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [identityRes, votesRes] = await Promise.all([
+          api.get("/api/identity"),
+          api.get("/api/votes"),
+        ]);
+
+        if (cancelled) return;
+
+        setIdentity(identityRes.data.data.identity ?? "");
+        setIdentityDraft(identityRes.data.data.identity ?? "");
+        setVotes(votesRes.data.data ?? []);
+      } catch (err: any) {
+        if (!cancelled) {
+          setError("Không thể tải dữ liệu. Vui lòng thử lại.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchData();
+    return () => { cancelled = true; };
+  }, []);
 
   // ── Identity ──
 
-  const handleSaveIdentity = useCallback(() => {
-    setData((prev) => ({ ...prev, identity: identityDraft }));
-    setIdentitySaved(true);
-    setTimeout(() => setIdentitySaved(false), 2000);
+  const handleSaveIdentity = useCallback(async () => {
+    try {
+      await api.put("/api/identity", { identity: identityDraft });
+      setIdentity(identityDraft);
+      setIdentitySaved(true);
+      setTimeout(() => setIdentitySaved(false), 2000);
+    } catch {
+      setError("Lưu identity thất bại.");
+    }
   }, [identityDraft]);
 
   // ── Votes ──
 
-  const addVote = useCallback(() => {
+  const addVote = useCallback(async () => {
     const name = newVoteName.trim();
     if (!name) return;
-    const vote: VoteRecord = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      name,
-      history: [],
-    };
-    setData((prev) => ({ ...prev, votes: [...prev.votes, vote] }));
-    setNewVoteName("");
+
+    try {
+      const res = await api.post("/api/votes", { name });
+      setVotes((prev) => [...prev, res.data.data]);
+      setNewVoteName("");
+    } catch {
+      setError("Thêm thói quen thất bại.");
+    }
   }, [newVoteName]);
 
-  const toggleToday = useCallback((id: string) => {
-    const todayStr = today();
-    setData((prev) => ({
-      ...prev,
-      votes: prev.votes.map((v) => {
-        if (v.id !== id) return v;
-        const has = v.history.includes(todayStr);
-        return {
-          ...v,
-          history: has
-            ? v.history.filter((d) => d !== todayStr)
-            : [...v.history, todayStr],
-        };
-      }),
-    }));
+  const toggleToday = useCallback(async (id: string) => {
+    try {
+      const res = await api.post(`/api/votes/${id}/toggle`);
+      const { voted } = res.data.data;
+      const todayStr = today();
+
+      setVotes((prev) =>
+        prev.map((v) => {
+          if (v.id !== id) return v;
+          return {
+            ...v,
+            history: voted
+              ? [...v.history, todayStr]
+              : v.history.filter((d) => d !== todayStr),
+          };
+        })
+      );
+    } catch {
+      setError("Toggle thất bại.");
+    }
   }, []);
 
-  const deleteVote = useCallback((id: string) => {
-    setData((prev) => ({
-      ...prev,
-      votes: prev.votes.filter((v) => v.id !== id),
-    }));
+  const deleteVote = useCallback(async (id: string) => {
+    try {
+      await api.delete(`/api/votes/${id}`);
+      setVotes((prev) => prev.filter((v) => v.id !== id));
+    } catch {
+      setError("Xoá thói quen thất bại.");
+    }
   }, []);
 
   const todayStr = today();
 
+  // ── Loading state ──
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16">
+        <Loader2 size={24} className="animate-spin text-secondary" />
+        <span className="text-xs font-mono text-secondary/60">Đang tải...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 md:gap-8 w-full">
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-center gap-2 text-[11px] font-mono text-danger bg-danger/10 border border-danger/25 px-4 py-3 rounded-xl font-semibold">
+          <AlertTriangle size={12} />
+          {error}
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto text-danger/60 hover:text-danger transition-colors focus-visible:ring-2 focus-visible:ring-secondary/50 rounded-lg px-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Identity Card */}
       <div className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-4">
         <h2 className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold font-mono border-b border-secondary/15 pb-3">
@@ -147,7 +198,7 @@ export default function IdentityVotes() {
           <div className="flex-1" />
           <button
             onClick={handleSaveIdentity}
-            disabled={identityDraft === data.identity}
+            disabled={identityDraft === identity}
             className="px-4 py-2 rounded-xl font-mono text-xs uppercase tracking-[0.2em] transition-all flex items-center gap-2 border border-secondary/20 shadow-sm bg-primary text-text font-bold hover:bg-[#F8C6AF] focus:ring-2 focus:ring-secondary/20 active:scale-95 disabled:bg-surface disabled:text-text/30 disabled:border-secondary/10 disabled:shadow-none"
           >
             <Save size={14} />
@@ -183,13 +234,13 @@ export default function IdentityVotes() {
         </div>
 
         {/* Vote List */}
-        {data.votes.length === 0 ? (
+        {votes.length === 0 ? (
           <div className="bg-bg-paper/40 border border-secondary/25 p-6 rounded-xl text-center text-secondary/60 font-mono text-sm">
             Chưa có thói quen nào. Hãy thêm một thói quen mới!
           </div>
         ) : (
           <div className="space-y-3">
-            {data.votes.map((vote) => {
+            {votes.map((vote) => {
               const streak = calcStreak(vote.history);
               const votedToday = vote.history.includes(todayStr);
               const warn = shouldWarnNeverMissTwice(vote.history);

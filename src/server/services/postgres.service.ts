@@ -59,6 +59,14 @@ export class PostgresService {
   }
 
   /**
+   * Returns the underlying connection pool for reuse by other services.
+   * Returns null if PostgreSQL storage is not enabled.
+   */
+  getPool(): pg.Pool | null {
+    return this.pool;
+  }
+
+  /**
    * Retrieves the latest 20 log entries from the PostgreSQL database.
    *
    * @returns A promise that resolves to an array of log records.
