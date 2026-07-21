@@ -11,12 +11,16 @@ import {
   Sun,
   Moon,
   LogOut,
+  Zap,
+  Vote,
 } from "lucide-react";
+import IdentityVotes from "./components/IdentityVotes.js";
 import api from "./lib/api.js";
 import LoginPage from "./pages/LoginPage.js";
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState<"console" | "logs">("console");
+  const [consoleMode, setConsoleMode] = useState<"classify" | "identity">("classify");
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -154,80 +158,128 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                 exit={{ opacity: 0 }}
                 className="flex flex-col gap-6 md:gap-8 w-full"
               >
-                {/* Input Buffer Card */}
-                <div className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-4">
-                  <h2 className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold font-mono border-b border-secondary/15 pb-3">
-                    Nhập nội dung
-                  </h2>
-
-                  <form onSubmit={handleGenerate} className="space-y-4">
-                    <div>
-                      <textarea
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        placeholder="Nhập nội dung cần phân loại, ví dụ: cà phê 50k, họp team 2h..."
-                        rows={5}
-                        className="w-full p-4 bg-bg-paper/40 border border-secondary/20 rounded-xl focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition-all text-sm font-mono text-text leading-relaxed placeholder-text/30"
-                      />
-                    </div>
-                    {error && (
-                      <div className="p-3 bg-danger/10 border border-danger/30 text-danger text-xs rounded-xl flex items-center gap-2 font-mono font-semibold">
-                        <AlertCircle size={14} />
-                        {error}
-                      </div>
-                    )}
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        disabled={loading || !prompt}
-                        className="px-6 py-3 rounded-xl font-mono text-xs uppercase tracking-[0.2em] transition-all flex items-center gap-2 border border-secondary/20 shadow-sm bg-primary text-text font-bold hover:bg-[#F8C6AF] focus:ring-2 focus:ring-secondary/20 active:scale-95 disabled:bg-surface disabled:text-text/30 disabled:border-secondary/10 disabled:shadow-none"
-                      >
-                        {loading ? (
-                          <Loader2
-                            size={16}
-                            className="animate-spin text-text"
-                          />
-                        ) : (
-                          <Send size={16} />
-                        )}
-                        Gửi
-                      </button>
-                    </div>
-                  </form>
+                {/* Segmented Control */}
+                <div className="bg-surface border border-secondary/20 rounded-2xl p-2 shadow-bento flex gap-2">
+                  <button
+                    onClick={() => setConsoleMode("classify")}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs uppercase tracking-[0.15em] font-bold transition-all active:scale-98 focus-visible:ring-2 focus-visible:ring-secondary/50 ${
+                      consoleMode === "classify"
+                        ? "bg-primary border border-primary/50 text-text shadow-sm"
+                        : "text-text/60 hover:text-text hover:bg-primary/10"
+                    }`}
+                  >
+                    <Zap size={14} />
+                    Phân loại
+                  </button>
+                  <button
+                    onClick={() => setConsoleMode("identity")}
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-mono text-xs uppercase tracking-[0.15em] font-bold transition-all active:scale-98 focus-visible:ring-2 focus-visible:ring-secondary/50 ${
+                      consoleMode === "identity"
+                        ? "bg-primary border border-primary/50 text-text shadow-sm"
+                        : "text-text/60 hover:text-text hover:bg-primary/10"
+                    }`}
+                  >
+                    <Vote size={14} />
+                    Identity & Votes
+                  </button>
                 </div>
 
-                {/* Inference Output Card */}
-                {(result || loading) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-4"
-                  >
-                    <div className="flex items-center gap-3 border-b border-secondary/15 pb-3">
-                      <Sparkles size={14} className="text-secondary" />
-                      <span className="text-[10px] uppercase tracking-widest text-secondary font-mono font-bold">
-                        Kết quả
-                      </span>
-                    </div>
-                    <div className="min-h-[120px]">
-                      {loading && !result ? (
-                        <div className="flex flex-col items-center justify-center py-8 text-secondary space-y-3">
-                          <Loader2
-                            className="animate-spin text-secondary"
-                            size={24}
-                          />
-                          <span className="text-[10px] font-mono tracking-widest uppercase animate-pulse text-secondary font-bold">
-                            Đang xử lý...
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="font-mono text-sm text-text bg-bg-paper/40 p-4 border border-secondary/20 rounded-xl leading-relaxed whitespace-pre-wrap shadow-sm">
-                          {result}
-                        </div>
+                {/* Sub-view: Classify or Identity */}
+                <AnimatePresence mode="wait">
+                  {consoleMode === "classify" ? (
+                    <motion.div
+                      key="classify-mode"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex flex-col gap-6 md:gap-8 w-full"
+                    >
+                      {/* Input Buffer Card */}
+                      <div className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-4">
+                        <h2 className="text-[10px] uppercase tracking-[0.2em] text-secondary font-bold font-mono border-b border-secondary/15 pb-3">
+                          Nhập nội dung
+                        </h2>
+
+                        <form onSubmit={handleGenerate} className="space-y-4">
+                          <div>
+                            <textarea
+                              value={prompt}
+                              onChange={(e) => setPrompt(e.target.value)}
+                              placeholder="Nhập nội dung cần phân loại, ví dụ: cà phê 50k, họp team 2h..."
+                              rows={5}
+                              className="w-full p-4 bg-bg-paper/40 border border-secondary/20 rounded-xl focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition-all text-sm font-mono text-text leading-relaxed placeholder-text/30"
+                            />
+                          </div>
+                          {error && (
+                            <div className="p-3 bg-danger/10 border border-danger/30 text-danger text-xs rounded-xl flex items-center gap-2 font-mono font-semibold">
+                              <AlertCircle size={14} />
+                              {error}
+                            </div>
+                          )}
+                          <div className="flex justify-end">
+                            <button
+                              type="submit"
+                              disabled={loading || !prompt}
+                              className="px-6 py-3 rounded-xl font-mono text-xs uppercase tracking-[0.2em] transition-all flex items-center gap-2 border border-secondary/20 shadow-sm bg-primary text-text font-bold hover:bg-[#F8C6AF] focus:ring-2 focus:ring-secondary/20 active:scale-95 disabled:bg-surface disabled:text-text/30 disabled:border-secondary/10 disabled:shadow-none"
+                            >
+                              {loading ? (
+                                <Loader2
+                                  size={16}
+                                  className="animate-spin text-text"
+                                />
+                              ) : (
+                                <Send size={16} />
+                              )}
+                              Gửi
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+
+                      {/* Inference Output Card */}
+                      {(result || loading) && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-surface border border-secondary/20 rounded-2xl p-6 shadow-bento space-y-4"
+                        >
+                          <div className="flex items-center gap-3 border-b border-secondary/15 pb-3">
+                            <Sparkles size={14} className="text-secondary" />
+                            <span className="text-[10px] uppercase tracking-widest text-secondary font-mono font-bold">
+                              Kết quả
+                            </span>
+                          </div>
+                          <div className="min-h-[120px]">
+                            {loading && !result ? (
+                              <div className="flex flex-col items-center justify-center py-8 text-secondary space-y-3">
+                                <Loader2
+                                  className="animate-spin text-secondary"
+                                  size={24}
+                                />
+                                <span className="text-[10px] font-mono tracking-widest uppercase animate-pulse text-secondary font-bold">
+                                  Đang xử lý...
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="font-mono text-sm text-text bg-bg-paper/40 p-4 border border-secondary/20 rounded-xl leading-relaxed whitespace-pre-wrap shadow-sm">
+                                {result}
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
                       )}
-                    </div>
-                  </motion.div>
-                )}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="identity-mode"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <IdentityVotes />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             ) : (
               <motion.div
