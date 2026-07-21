@@ -59,8 +59,10 @@ The project follows a "Single Repo, Unified Build" strategy:
 - **Messenger**: Webhook points to `/api/webhook/messenger`. Requires a "Verify Token" for setup.
 
 ## 6. Security & Authentication
-- **Current State**: Authentication is **Disabled** in the current implementation.
-- **Planned**: JWT-based authentication using cookies. The infrastructure (`cookie-parser`, `jsonwebtoken`) is already present in `package.json` but not yet integrated into the route handlers.
+- **Current State**: JWT-based authentication is active.
+- **Auth Flow**: Users authenticate via password login, followed by OTP verification sent via Messenger or Telegram.
+- **Protected Routes**: The `verifyJWT` middleware protects internal API routes including `/ai/generate`, `/logs`, `/identity`, and `/votes`.
+- **Token Storage**: The JWT token is stored securely in an `httpOnly` cookie.
 - **Environment Variables**: Sensitive keys (API tokens) are stored in `.env` and accessed via `process.env` on the backend.
   - `GROQ_API_KEY`: API key for Groq AI inference.
   - `NOTION_API_KEY`: Integration token for Notion.

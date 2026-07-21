@@ -20,16 +20,17 @@
 | Axios Client | `src/lib/api.ts` | ✅ Hoàn thiện |
 | CI/CD Pipeline | `.github/workflows/ci.yml` | ✅ Hoàn thiện |
 | Docker / Vercel deploy | `Dockerfile`, `vercel.json` | ✅ Hoàn thiện |
+| Input Validation (Zod) | `src/server/schemas/`, `middlewares/validate.ts` | ✅ Hoàn thiện |
+| Rate Limiting | `src/server/middlewares/rateLimiter.ts` | ✅ Hoàn thiện |
+| JWT Authentication | `src/server/middlewares/authMiddleware.ts`, `controllers/auth.controller.ts` | ✅ Hoàn thiện |
+| Identity & Votes | `controllers/identity-votes.controller.ts`, `services/identity-votes.service.ts` | ✅ Hoàn thiện |
 
 ### Phần còn dang dở / thiếu
 
 | Vấn đề | Vị trí | Ghi chú |
 |--------|--------|---------|
-| Auth middleware | `src/server/middlewares/` (rỗng) | `jsonwebtoken` + `cookie-parser` đã cài nhưng chưa dùng |
-| Input validation | Không có file nào | Không có schema validation (zod/joi) |
 | Structured logging | Toàn bộ services | Chỉ dùng `console.log/error`, không có log aggregation |
 | Unit tests | Không có | Chỉ có `test-api.ts` manual |
-| Rate limiting | Không có middleware | Webhook endpoint hoàn toàn public |
 | CORS config | `src/server/index.ts` | Không thấy cấu hình explicit |
 | Request tracing | Toàn bộ | Không có correlation ID giữa các service |
 | Monitoring / APM | Không có | Không có uptime tracking, alerting |
@@ -51,13 +52,13 @@
 
 | # | Tính năng | Mô tả ngắn | Module liên quan | Độ phức tạp | Ưu tiên |
 |---|-----------|-----------|-----------------|-------------|---------|
-| 1 | **Input Validation Middleware** | Validate schema các request với Zod trước khi vào controller | `middlewares/validate.ts`, routes | S | P1 |
+| 1 | **Input Validation Middleware** | Validate schema các request với Zod trước khi vào controller | `middlewares/validate.ts`, routes | S | ✅ Xong |
 | 2 | **Structured Logging** | Thay `console.log` bằng `pino` — log JSON có level, timestamp, request ID | `services/`, `middlewares/logger.ts` | S | P1 |
-| 3 | **Rate Limiting** | Giới hạn request/IP cho `/api/ai/generate` và webhook endpoints | `middlewares/rateLimit.ts`, routes | S | P1 |
+| 3 | **Rate Limiting** | Giới hạn request/IP cho `/api/ai/generate` và webhook endpoints | `middlewares/rateLimit.ts`, routes | S | ✅ Xong |
 | 4 | **CORS Configuration** | Explicit allowlist origin cho production | `src/server/index.ts` | S | P1 |
 | 5 | **Error Sanitization** | Không trả `err.message` raw, dùng error code thống nhất | `controllers/`, `server/index.ts` | S | P2 |
 | 6 | **Webhook Signature Verification** | Verify HMAC signature cho Telegram và Messenger webhook | `middlewares/webhookAuth.ts` | M | P2 |
-| 7 | **JWT Authentication** | Bật auth middleware (infrastructure đã có), bảo vệ `/api/ai/generate` và `/api/logs` | `middlewares/auth.ts`, routes | M | P2 |
+| 7 | **JWT Authentication** | Bật auth middleware (infrastructure đã có), bảo vệ `/api/ai/generate` và `/api/logs` | `middlewares/auth.ts`, routes | M | ✅ Xong |
 | 8 | **Retry Logic** | Exponential backoff cho Groq và Notion API calls | `ai.service.ts`, `notion.service.ts` | S | P2 |
 | 9 | **Unit Test Suite** | Test các service (ai, notion, telegram) với mock | `src/server/services/*.test.ts` | M | P2 |
 | 10 | **Health Check Endpoint** | `GET /health` trả về trạng thái các service (Notion, Postgres, Groq) | `routes/index.ts`, controllers | S | P3 |

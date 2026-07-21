@@ -10,5 +10,6 @@ data/
 .env*
 !.env.example
 Prompt.txt
+openapi.html
 .vercel
 .env*.local

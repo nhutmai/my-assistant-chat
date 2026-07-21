@@ -16,7 +16,7 @@
     "openapi:build": "npx --yes @redocly/cli build-docs openapi.yaml -o openapi.html",
     "openapi:preview": "npm run openapi:build && python3 -m http.server 8080 --bind 127.0.0.1",
     "openapi:stop": "kill $(lsof -tiTCP:8080 -sTCP:LISTEN) 2>/dev/null || true",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist build",
     "lint": "tsc --noEmit",
     "migrate": "tsx migrate.ts up",
     "migrate:status": "tsx migrate.ts status",

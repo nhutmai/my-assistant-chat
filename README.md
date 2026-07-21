@@ -105,6 +105,12 @@ Routes are mounted under `/api`:
 - `GET /api/webhook/messenger`
 - `POST /api/webhook/messenger`
 - `POST /api/webhook/telegram`
+- `GET /api/identity`
+- `PUT /api/identity`
+- `GET /api/votes`
+- `POST /api/votes`
+- `DELETE /api/votes/:id`
+- `POST /api/votes/:id/toggle`
 
 See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for request and response details.
 
