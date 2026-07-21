@@ -1,19 +1,90 @@
 # Gemini Bridge API Documentation (v2.1.0)
 
-Hệ thống cung cấp các API để trích xuất dữ liệu bằng AI và tích hợp đa kênh (Web, Facebook Messenger, Telegram).
+Hệ thống cung cấp các API để trích xuất dữ liệu bằng AI, quản lý định hướng nhận diện (Identity & Votes) và tích hợp đa kênh (Web, Facebook Messenger, Telegram).
 
 ---
 
-## 1. Authentication (Lưu ý)
-Hiện tại, hệ thống đang hoạt động ở chế độ **Public (AUTH=DISABLED)**. Các route xác thực JWT đề cập trong tài liệu cũ chưa được triển khai trong mã nguồn thực tế.
+## 1. Authentication
+
+Hệ thống sử dụng **JWT Authentication**. Các API yêu cầu xác thực cần truyền header `Authorization: Bearer <token>`.
+Người dùng có thể đăng nhập bằng mật khẩu (Admin) hoặc qua OTP (kênh Messenger/Telegram).
+
+### Đăng nhập bằng Password
+- **Endpoint:** `POST /api/auth/login`
+- **Auth Required:** No
+- **Mô tả:** Đăng nhập dành cho tài khoản Admin sử dụng username và password.
+- **Payload:**
+  ```json
+  {
+    "username": "admin",
+    "password": "your_password"
+  }
+  ```
+- **Phản hồi (200):**
+  ```json
+  {
+    "token": "jwt_token_string",
+    "expiresIn": "24h"
+  }
+  ```
+
+### Yêu cầu OTP
+- **Endpoint:** `POST /api/auth/otp/request`
+- **Auth Required:** No
+- **Mô tả:** Gửi yêu cầu mã OTP qua kênh đã chọn (facebook hoặc telegram).
+- **Payload:**
+  ```json
+  {
+    "channel": "facebook",
+    "username": "admin"
+  }
+  ```
+
+### Xác thực OTP
+- **Endpoint:** `POST /api/auth/otp/verify`
+- **Auth Required:** No
+- **Mô tả:** Xác thực mã OTP và nhận lại JWT token.
+- **Payload:**
+  ```json
+  {
+    "username": "admin",
+    "otp": "123456",
+    "channel": "facebook"
+  }
+  ```
+- **Phản hồi (200):**
+  ```json
+  {
+    "token": "jwt_token_string",
+    "expiresIn": "24h"
+  }
+  ```
 
 ---
 
-## 2. AI & Data Services
+## 2. Health Check
 
-### Trích xuất dữ liệu từ Web
+### Kiểm tra trạng thái hệ thống
+- **Endpoint:** `GET /api/health`
+- **Auth Required:** No
+- **Mô tả:** Kiểm tra trạng thái và version của hệ thống.
+- **Phản hồi (200):**
+  ```json
+  {
+    "status": "ok",
+    "timestamp": "2026-07-21T10:00:00Z",
+    "version": "2.1.0"
+  }
+  ```
+
+---
+
+## 3. AI & Logs Services
+
+### Trích xuất dữ liệu bằng AI
 - **Endpoint:** `POST /api/ai/generate`
-- **Mô tả:** Nhận prompt từ giao diện web, gọi Groq AI để phân loại và trích xuất dữ liệu, sau đó lưu vào Notion.
+- **Auth Required:** Yes
+- **Mô tả:** Nhận prompt, gọi AI để phân loại và trích xuất dữ liệu, lưu vào Notion và Postgres.
 - **Payload:**
   ```json
   {
@@ -34,10 +105,11 @@ Hiện tại, hệ thống đang hoạt động ở chế độ **Public (AUTH=D
   }
   ```
 
-### Lấy lịch sử Logs
+### Lấy danh sách Logs
 - **Endpoint:** `GET /api/logs`
-- **Mô tả:** Lấy 20 bản ghi mới nhất từ Notion Database.
-- **Phản hồi thành công (200):**
+- **Auth Required:** Yes
+- **Mô tả:** Lấy danh sách các bản ghi mới nhất từ Notion Database.
+- **Phản hồi (200):**
   ```json
   {
     "status": "success",
@@ -53,27 +125,103 @@ Hiện tại, hệ thống đang hoạt động ở chế độ **Public (AUTH=D
 
 ---
 
-## 3. Webhooks (Đa kênh)
+## 4. Identity & Votes
+
+### Lấy Identity
+- **Endpoint:** `GET /api/identity`
+- **Auth Required:** Yes
+- **Mô tả:** Lấy nội dung định hướng (Identity) của người dùng hiện tại.
+- **Phản hồi (200):**
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "identity": "Nội dung identity..."
+    }
+  }
+  ```
+
+### Lưu Identity
+- **Endpoint:** `PUT /api/identity`
+- **Auth Required:** Yes
+- **Mô tả:** Cập nhật hoặc lưu nội dung định hướng mới.
+- **Payload:**
+  ```json
+  {
+    "identity": "Nội dung mới..."
+  }
+  ```
+
+### Lấy danh sách Votes
+- **Endpoint:** `GET /api/votes`
+- **Auth Required:** Yes
+- **Mô tả:** Lấy danh sách các thói quen/hành động (votes) của người dùng.
+- **Phản hồi (200):**
+  ```json
+  {
+    "status": "success",
+    "data": [
+      {
+        "id": "vote_id",
+        "name": "Đọc sách 30p"
+      }
+    ]
+  }
+  ```
+
+### Thêm Vote mới
+- **Endpoint:** `POST /api/votes`
+- **Auth Required:** Yes
+- **Mô tả:** Tạo một vote mới.
+- **Payload:**
+  ```json
+  {
+    "name": "Tập thể dục"
+  }
+  ```
+
+### Xóa Vote
+- **Endpoint:** `DELETE /api/votes/:id`
+- **Auth Required:** Yes
+- **Mô tả:** Xóa một vote dựa vào `id`.
+
+### Toggle Vote (Trong ngày)
+- **Endpoint:** `POST /api/votes/:id/toggle`
+- **Auth Required:** Yes
+- **Mô tả:** Chuyển đổi trạng thái (hoàn thành/chưa hoàn thành) của một vote trong ngày hôm nay.
+
+---
+
+## 5. Webhooks (Đa kênh)
 
 ### Facebook Messenger Webhook
 #### Xác thực (Verification)
 - **Endpoint:** `GET /api/webhook/messenger`
+- **Auth Required:** No
 - **Tham số query:** `hub.mode`, `hub.verify_token`, `hub.challenge`
 - **Mô tả:** Dùng để xác thực webhook với Facebook Developers.
-  
-#### Xử lý tin nhắn (Message Processing)
+
+#### Xử lý tin nhắn
 - **Endpoint:** `POST /api/webhook/messenger`
-- **Mô tả:** Tiếp nhận sự kiện tin nhắn từ Facebook, xử lý qua AI và lưu vào Notion, sau đó phản hồi cho người dùng qua Send API.
+- **Auth Required:** No
+- **Mô tả:** Tiếp nhận sự kiện tin nhắn từ Facebook, xử lý qua AI, lưu vào Notion/Postgres và phản hồi qua Send API.
 
 ### Telegram Bot Webhook
 - **Endpoint:** `POST /api/webhook/telegram`
-- **Mô tả:** Tiếp nhận Update từ Telegram Bot. Xử lý tin nhắn văn bản, trích xuất dữ liệu AI, lưu vào Notion và gửi tin nhắn phản hồi cho người dùng.
+- **Auth Required:** No
+- **Mô tả:** Tiếp nhận Update từ Telegram Bot, xử lý tin nhắn, trích xuất dữ liệu, lưu trữ và gửi phản hồi.
 - **Payload:** Cấu trúc chuẩn của Telegram Update Object.
 
 ---
 
-## 4. Error Handling
+## 6. Error Handling
 Mọi lỗi phát sinh trong quá trình xử lý AI hoặc tích hợp dịch vụ đều được:
-1. Log ra console hệ thống.
-2. Tự động ghi vào Notion với `category: "error"` để hiển thị trên giao diện Web.
-3. Trả về mã lỗi 400/500 tương ứng cho client.
+1. Log ra console hệ thống sử dụng thư viện pino/logger.
+2. Tự động ghi vào Notion và Postgres với `category: "error"`.
+3. Trả về mã lỗi 400/401/403/404/500 tương ứng cho client dưới định dạng:
+   ```json
+   {
+     "status": "error",
+     "message": "Nội dung lỗi chi tiết"
+   }
+   ```
