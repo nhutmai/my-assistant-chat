@@ -20,6 +20,7 @@ export class PostgresService {
         database: process.env.POSTGRES_DB,
         user: process.env.POSTGRES_USER,
         password: process.env.POSTGRES_PASSWORD,
+        ssl: { rejectUnauthorized: false },
       });
 
       this.pool.on("error", (err) => {
@@ -32,7 +33,7 @@ export class PostgresService {
    * Saves a log entry to PostgreSQL.
    * This method is designed to be non-blocking and handles its own errors
    * to ensure that failures in PostgreSQL do not affect the main application flow.
-   * 
+   *
    * @param prompt - The original input prompt from the user.
    * @param data - The structured data extracted by the AI service.
    */
@@ -49,7 +50,7 @@ export class PostgresService {
         data.category || "unknown",
         data.title || "Untitled",
         data.value || 0,
-        data.date || new Date().toISOString()
+        data.date || new Date().toISOString(),
       ];
       await this.pool.query(query, values);
     } catch (error) {
@@ -59,7 +60,7 @@ export class PostgresService {
 
   /**
    * Retrieves the latest 20 log entries from the PostgreSQL database.
-   * 
+   *
    * @returns A promise that resolves to an array of log records.
    */
   async getLogs(): Promise<any[]> {

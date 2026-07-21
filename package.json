@@ -18,6 +18,8 @@
     "openapi:stop": "kill $(lsof -tiTCP:8080 -sTCP:LISTEN) 2>/dev/null || true",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
+    "migrate": "tsx migrate.ts up",
+    "migrate:status": "tsx migrate.ts status",
     "test": "vitest run",
     "test:watch": "vitest"
   },
