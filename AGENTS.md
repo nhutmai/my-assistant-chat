@@ -1,9 +1,11 @@
 # Repository & Project Guidelines
 
 ## Project Overview
-Gemini Bridge is a full-stack application that acts as a middleware bridging AI inference capabilities from Groq and Gemini with messaging platforms such as Telegram and Messenger, while ensuring persistent activity logging through the Notion SDK. The system handles real-time webhooks, processes natural language through AI services, and maintains a structured history of interactions in a Notion database.
+
+My Assisstance is a full-stack application that acts as a middleware bridging AI inference capabilities from Groq and Gemini with messaging platforms such as Telegram and Messenger, while ensuring persistent activity logging through the Notion SDK. The system handles real-time webhooks, processes natural language through AI services, and maintains a structured history of interactions in a Notion database.
 
 ## Tech Stack
+
 - **React 19 + Vite**: Frontend framework and build tool for a high-performance user interface.
 - **Tailwind CSS v4**: Utility-first CSS framework for modern, responsive styling.
 - **Node.js + Express**: Backend runtime and web framework for handling API requests and webhooks.
@@ -14,6 +16,7 @@ Gemini Bridge is a full-stack application that acts as a middleware bridging AI 
 - **Vercel**: Deployment platform for hosting the frontend and executing serverless backend functions.
 
 ## Project Structure & Module Organization
+
 This is a TypeScript React/Vite app with a Node/Express API layer.
 
 - `src/App.tsx`, `src/main.tsx`, and `src/index.css` contain the frontend UI and styling.
@@ -28,6 +31,7 @@ This is a TypeScript React/Vite app with a Node/Express API layer.
 - Project documentation lives in `README.md`, `ARCHITECTURE.md`, `API_DOCUMENTATION.md`, and `ROADMAP.md`.
 
 ## Build, Test, and Development Commands
+
 - `npm install`: Install dependencies from `package-lock.json`.
 - `npm run dev`: Start the local server with `tsx server.ts`.
 - `npm run build`: Build the Vite frontend into `dist/`.
@@ -36,6 +40,7 @@ This is a TypeScript React/Vite app with a Node/Express API layer.
 - `npm run clean`: Remove the generated `dist/` directory.
 
 ## Coding Style & Naming Conventions
+
 - **TypeScript**: Use TypeScript with ES modules across the entire stack.
 - **Imports**: Because `tsconfig.json` uses `moduleResolution: "NodeNext"`, server-side relative imports must include `.js` extensions (e.g., `import routes from "./routes/index.js"`).
 - **Naming**: Use explicit names for controllers and services. Use lowercase dotted filenames for backend modules (e.g., `ai.controller.ts` and `telegram.service.ts`).
@@ -46,14 +51,17 @@ This is a TypeScript React/Vite app with a Node/Express API layer.
 - **API Requests**: Prioritize migration to and usage of the centralized Axios client in `src/lib/api.ts` instead of raw `fetch`.
 
 ## Backend & Integration Rules
+
 - **Controller Contract**: Keep controllers thin; they should only handle request validation and response formatting.
 - **Service Responsibility**: Place all integration logic, external API calls, and complex data processing in the `src/server/services/` directory.
 - **Route Definitions**: Decouple route paths from logic by defining them in the `src/server/routes/` directory and mapping them to controllers.
 
 ## Testing Guidelines
+
 No dedicated automated test framework is currently configured. Before submitting changes, run `npm run lint` and manually verify affected flows with `npm run dev`. For API changes, exercise the relevant endpoint, for example `POST /api/ai/generate` or webhook routes. If adding tests, place them near the code they cover or under a clear `tests/` directory, and document the new command in `package.json`.
 
 ## Documentation Update Rules
+
 - **Update Relevant Docs After Changes**: After completing any feature, bug fix, integration, API change, configuration change, or workflow change, update the related documentation before considering the task done.
 - **Keep Docs In Sync**: Review and update `README.md`, `ARCHITECTURE.md`, `API_DOCUMENTATION.md`, `ROADMAP.md`, `.env.example`, and any task-specific docs that are affected by the change.
 - **Document User-Facing Behavior**: For new or changed UI flows, endpoints, environment variables, setup steps, deployment steps, or operational procedures, include clear usage notes and examples where helpful.
@@ -61,23 +69,28 @@ No dedicated automated test framework is currently configured. Before submitting
 - **No Stale Docs**: If no documentation update is needed, explicitly note that the docs were reviewed and why no change was required.
 
 ## Security, Environment & Configuration
+
 - **Key Registry**: Required keys include `GROQ_API_KEY`, `NOTION_API_KEY`, `NOTION_DATABASE_ID`, `TELEGRAM_BOT_TOKEN`, `FB_PAGE_ACCESS_TOKEN`, and `FB_VERIFY_TOKEN`.
 - **Access Pattern**: Retrieve all secrets via `process.env` on the backend only; never expose these to the client.
 - **Secrets Audit**: Do not commit secrets. Use `.env.example` as the template for local configuration. Never hardcode sensitive information; use `.env` for local development and the Vercel dashboard for production.
 - **Webhook Security**: Keep webhook verification tokens unique per environment.
 
 ## Commit & Pull Request Guidelines
+
 - **Git History**: Use short, imperative commit subjects (e.g., `Add Telegram webhook support and service`, `Standardize API responses and update docs`). Keep commits focused on one behavior or fix.
 - **Pull Requests**: Include a concise summary, verification steps, linked issues when applicable, and screenshots or request/response examples for UI or API behavior changes. Note any new environment variables or deployment changes.
 
 ## Before Every Task
+
 - **Run Linting**: Execute `npm run lint` (`tsc --noEmit`) and fix all type errors before proceeding.
 - **Manual Verification**: Manually test the affected endpoint or UI flow to ensure functional correctness.
 - **Documentation Review**: Check whether the completed change requires updates to project documentation, and make those updates before finishing.
 - **Secrets Audit**: Verify that no API keys or personal credentials have been accidentally added to the source code.
 
 ## UI / Design Rules
+
 The Bento design system must be applied automatically to every UI task—even when the user makes no mention of design or style:
+
 - **Silently Read Design Docs**: Always read `.agents/skills/bento/DESIGN.md` and `.agents/skills/bento/SKILL.md` before writing any UI/frontend code.
 - **Scope**: These rules are always active for all components, pages, layouts, and forms, without needing an explicit prompt.
 - **Bento Tokens Only**: Use only the designated colors:
@@ -89,9 +102,8 @@ The Bento design system must be applied automatically to every UI task—even wh
 - **Interaction States**: Every interactive element (buttons, links, inputs, tabs, etc.) must explicitly define all of the following states: default, hover, focus-visible, active (e.g., active:scale-95), and disabled.
 - **Accessibility**: Ensure full WCAG 2.2 AA contrast compliance on all text and interactive elements.
 
-
-
 ## Forbidden Actions
+
 - **DO NOT** hardcode secrets or sensitive credentials into the source code.
 - **DO NOT** place business or external API integration logic directly inside controllers.
 - **DO NOT** commit `.env` files to the repository; use `.env.example` for template updates.
@@ -99,6 +111,7 @@ The Bento design system must be applied automatically to every UI task—even wh
 - **DO NOT** omit the `.js` extension in server-side relative imports.
 
 <!-- gitnexus:start -->
+
 # GitNexus — Code Intelligence
 
 This project is indexed by GitNexus as **my-assistant-chat** (281 symbols, 398 relationships, 0 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
@@ -122,22 +135,22 @@ This project is indexed by GitNexus as **my-assistant-chat** (281 symbols, 398 r
 
 ## Resources
 
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/my-assistant-chat/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/my-assistant-chat/clusters` | All functional areas |
-| `gitnexus://repo/my-assistant-chat/processes` | All execution flows |
-| `gitnexus://repo/my-assistant-chat/process/{name}` | Step-by-step execution trace |
+| Resource                                           | Use for                                  |
+| -------------------------------------------------- | ---------------------------------------- |
+| `gitnexus://repo/my-assistant-chat/context`        | Codebase overview, check index freshness |
+| `gitnexus://repo/my-assistant-chat/clusters`       | All functional areas                     |
+| `gitnexus://repo/my-assistant-chat/processes`      | All execution flows                      |
+| `gitnexus://repo/my-assistant-chat/process/{name}` | Step-by-step execution trace             |
 
 ## CLI
 
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+| Task                                         | Read this skill file                                        |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md`       |
+| Blast radius / "What breaks if I change X?"  | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?"             | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md`       |
+| Rename / extract / split / refactor          | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md`     |
+| Tools, resources, schema reference           | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md`           |
+| Index, status, clean, wiki CLI commands      | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md`             |
 
 <!-- gitnexus:end -->

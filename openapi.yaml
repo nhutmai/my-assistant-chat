@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Gemini Bridge API
+  title: My Assisstance API
   version: 0.0.0
-  description: Gemini Bridge exposes AI generation, activity logs, authentication, health checks, and messaging platform webhook endpoints. It connects Groq/OpenAI-compatible inference with Notion logging, optional PostgreSQL persistence, Telegram, and Facebook Messenger.
+  description: My Assisstance exposes AI generation, activity logs, authentication, health checks, and messaging platform webhook endpoints. It connects Groq/OpenAI-compatible inference with Notion logging, optional PostgreSQL persistence, Telegram, and Facebook Messenger.
 servers:
   - url: http://localhost:3000
     description: Local development server
@@ -928,7 +928,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Vote'
+                      $ref: "#/components/schemas/Vote"
         "401":
           description: Unauthorized
         "500":
@@ -966,7 +966,7 @@ paths:
                     type: string
                     example: success
                   data:
-                    $ref: '#/components/schemas/Vote'
+                    $ref: "#/components/schemas/Vote"
         "400":
           description: Validation failed
         "401":

@@ -1,8 +1,6 @@
 node_modules/
 build/
 dist/
-docs/.vitepress/dist/
-docs/.vitepress/cache/
 coverage/
 data/
 .DS_Store
@@ -13,3 +11,4 @@ Prompt.txt
 openapi.html
 .vercel
 .env*.local
+x
