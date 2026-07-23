@@ -10,9 +10,7 @@
     "build:server": "tsc -p tsconfig.server.json",
     "build:prod": "npm run build && npm run build:server",
     "preview": "vite preview",
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs",
+
     "openapi:build": "npx --yes @redocly/cli build-docs openapi.yaml -o openapi.html",
     "openapi:preview": "npm run openapi:build && python3 -m http.server 8080 --bind 127.0.0.1",
     "openapi:stop": "kill $(lsof -tiTCP:8080 -sTCP:LISTEN) 2>/dev/null || true",
@@ -57,7 +55,7 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3",
-    "vitepress": "^1.6.4",
+
     "vitest": "^4.1.7"
   }
 }
