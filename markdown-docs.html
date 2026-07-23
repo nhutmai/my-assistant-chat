@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini Bridge — Tổng quan hệ thống</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface-hover: #22262f;
+      --border: #2a2e3a;
+      --text: #e4e6eb;
+      --text-muted: #8b8fa3;
+      --accent: #FAD4C0;
+      --accent-dim: #f8c6af33;
+      --blue: #80A1C1;
+      --blue-dim: #80a1c133;
+      --green: #6bcf8e;
+      --green-dim: #6bcf8e22;
+      --yellow: #f0c674;
+      --yellow-dim: #f0c67422;
+      --red: #e06c75;
+      --red-dim: #e06c7522;
+      --purple: #c78ddb;
+      --purple-dim: #c78ddb22;
+      --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+      --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      padding: 32px 24px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 28px; font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 32px; }
+    .toc {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px 24px; margin-bottom: 32px;
+    }
+    .toc h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px; }
+    .toc ul { list-style: none; columns: 2; column-gap: 24px; }
+    .toc li { padding: 4px 0; }
+    .toc a {
+      color: var(--blue); text-decoration: none; font-size: 14px;
+      transition: color .15s;
+    }
+    .toc a:hover { color: var(--accent); }
+    section {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 24px; margin-bottom: 20px;
+      transition: border-color .2s;
+    }
+    section:hover { border-color: var(--blue); }
+    section h2 {
+      font-size: 18px; font-weight: 600; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 500;
+      padding: 2px 8px; border-radius: 6px;
+      font-family: var(--mono);
+    }
+    .badge-be { background: var(--blue-dim); color: var(--blue); }
+    .badge-fe { background: var(--green-dim); color: var(--green); }
+    .badge-infra { background: var(--yellow-dim); color: var(--yellow); }
+    .badge-mid { background: var(--purple-dim); color: var(--purple); }
+    p { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .feature-item {
+      background: var(--surface-hover); border-radius: 8px; padding: 12px 14px;
+      font-size: 13px;
+    }
+    .feature-item strong { color: var(--text); display: block; margin-bottom: 4px; }
+    .feature-item span { color: var(--text-muted); }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+      font-family: var(--mono); margin-bottom: 16px;
+    }
+    th {
+      text-align: left; color: var(--text-muted); font-weight: 500;
+      padding: 8px 12px; border-bottom: 1px solid var(--border);
+      font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+    }
+    td {
+      padding: 8px 12px; border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    td:first-child { white-space: nowrap; }
+    .method {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      padding: 2px 6px; border-radius: 4px; min-width: 48px; text-align: center;
+    }
+    .method-get { background: var(--green-dim); color: var(--green); }
+    .method-post { background: var(--blue-dim); color: var(--blue); }
+    .method-put { background: var(--yellow-dim); color: var(--yellow); }
+    .method-delete { background: var(--red-dim); color: var(--red); }
+    .files {
+      font-family: var(--mono); font-size: 12px; color: var(--text-muted);
+      background: var(--bg); border-radius: 8px; padding: 12px 14px;
+      margin-top: 8px;
+    }
+    .files strong { color: var(--text-muted); font-weight: 500; }
+    .env-list {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+    }
+    .env-var {
+      font-family: var(--mono); font-size: 11px;
+      background: var(--accent-dim); color: var(--accent);
+      padding: 3px 8px; border-radius: 5px;
+    }
+    .divider { height: 1px; background: var(--border); margin: 16px 0; }
+    .footer {
+      text-align: center; color: var(--text-muted); font-size: 12px;
+      margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);
+    }
+    @media (max-width: 640px) {
+      .feature-grid { grid-template-columns: 1fr; }
+      .toc ul { columns: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>🌉 Gemini Bridge — Tổng quan hệ thống</h1>
+<p class="subtitle">
+  Middleware nối AI inference (Groq/Gemini) với nền tảng nhắn tin (Telegram, Messenger),
+  kèm giao diện web dashboard và hệ thống logging qua Notion/Postgres.<br>
+  <em>Tạo tự động từ phân tích mã nguồn thực tế — 23/07/2026</em>
+</p>
+
+<nav class="toc">
+  <h2>Mục lục</h2>
+  <ul>
+    <li><a href="#auth">1. Xác thực & Phân quyền</a></li>
+    <li><a href="#ai">2. Dịch vụ AI</a></li>
+    <li><a href="#webhook">3. Webhook Messaging</a></li>
+    <li><a href="#logging">4. Logging & Lịch sử</a></li>
+    <li><a href="#identity">5. Identity & Votes</a></li>
+    <li><a href="#frontend">6. Giao diện Frontend</a></li>
+    <li><a href="#middleware">7. Middleware & Bảo mật</a></li>
+    <li><a href="#infra">8. Hạ tầng & Triển khai</a></li>
+    <li><a href="#dx">9. Developer Tooling</a></li>
+  </ul>
+</nav>
+
+<!-- ===== 1. AUTH ===== -->
+<section id="auth">
+  <h2>🔐 Xác thực & Phân quyền <span class="badge badge-be">Backend</span></h2>
+  <p>Hệ thống JWT authentication bảo vệ toàn bộ API. Hỗ trợ 2 phương thức đăng nhập: mật khẩu tĩnh và OTP qua messaging.</p>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <strong>Đăng nhập bằng mật khẩu</strong>
+      <span>Kiểm tra credentials so với biến môi trường <code>ADMIN_USERNAME</code> / <code>ADMIN_PASSWORD</code>. Trả về JWT token có thời hạn 24 giờ.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Đăng nhập bằng OTP</strong>
+      <span>Tạo mã 6 số, lưu in-memory (TTL 5 phút), gửi tới user qua Facebook Messenger hoặc Telegram dựa trên channel được chọn.</span>
+    </div>
+    <div class="feature-item">
+      <strong>JWT Middleware</strong>
+      <span>Middleware <code>verifyJWT</code> kiểm tra token ở header <code>Authorization: Bearer &lt;token&gt;</code>. Frontend lưu token trong <code>localStorage</code>.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Route bảo vệ</strong>
+      <span>Tất cả route trừ <code>/health</code>, <code>/auth/*</code> và webhook verification đều yêu cầu JWT hợp lệ.</span>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Mô tả</th></tr>
+    <tr><td><span class="method method-post">POST</span></td><td>/api/auth/login</td><td>Đăng nhập bằng username + password</td></tr>
+    <tr><td><span class="method method-post">POST</span></td><td>/api/auth/otp/request</td><td>Yêu cầu mã OTP (channel: facebook | telegram)</td></tr>
+    <tr><td><span class="method method-post">POST</span></td><td>/api/auth/otp/verify</td><td>Xác thực mã OTP → nhận JWT</td></tr>
+  </table>
+
+  <div class="files">
+    <strong>Files:</strong> controllers/auth.controller.ts · services/otp.service.ts · middlewares/authMiddleware.ts · pages/LoginPage.tsx
+  </div>
+  <div class="env-list">
+    <span class="env-var">JWT_SECRET</span>
+    <span class="env-var">ADMIN_USERNAME</span>
+    <span class="env-var">ADMIN_PASSWORD</span>
+  </div>
+</section>
+
+<!-- ===== 2. AI ===== -->
+<section id="ai">
+  <h2>🤖 Dịch vụ AI <span class="badge badge-be">Backend</span></h2>
+  <p>Sử dụng Groq API (OpenAI-compatible) với model <code>llama-3.3-70b-versatile</code> để phân tích ngôn ngữ tự nhiên và trích xuất dữ liệu có cấu trúc.</p>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <strong>Phân loại tự động</strong>
+      <span>Nhận văn bản đầu vào (VD: "Ăn phở 50k"), trả về JSON gồm <code>category</code> ("chi tiêu" | "ghi chú"), <code>title</code>, <code>value</code>, <code>date</code>.</span>
+    </div>
+    <div class="feature-item">
+      <strong>JSON Response Format</strong>
+      <span>Sử dụng <code>response_format: { type: "json_object" }</code> để đảm bảo AI luôn trả JSON hợp lệ, không trả text thô.</span>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Mô tả</th></tr>
+    <tr><td><span class="method method-post">POST</span></td><td>/api/ai/generate</td><td>Gửi prompt → nhận JSON phân loại (rate limit: 20 req/phút)</td></tr>
+  </table>
+
+  <div class="files">
+    <strong>Files:</strong> controllers/ai.controller.ts · services/ai.service.ts · schemas/ai.schema.ts
+  </div>
+  <div class="env-list">
+    <span class="env-var">GROQ_API_KEY</span>
+  </div>
+</section>
+
+<!-- ===== 3. WEBHOOK ===== -->
+<section id="webhook">
+  <h2>💬 Webhook Messaging <span class="badge badge-be">Backend</span></h2>
+  <p>Tích hợp với Telegram Bot API và Facebook Messenger Platform. Nhận tin nhắn → phân tích AI → log kết quả → phản hồi user qua cùng kênh.</p>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <strong>Telegram Bot</strong>
+      <span>Nhận webhook POST, trích xuất text, gọi AI, gửi phản hồi HTML. Tự động nhớ <code>chatId</code> để gửi OTP sau này.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Facebook Messenger</strong>
+      <span>Xác thực webhook bằng verify token. Nhận message events, xử lý tương tự Telegram. Nhớ <code>senderId</code> vào file JSON.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Recipient Memory</strong>
+      <span>Lưu cache ID người nhận (Telegram chatId, FB senderId) vào file JSON trong thư mục <code>data/</code> để dùng cho OTP.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Dual Logging</strong>
+      <span>Mỗi tin nhắn được log song song ra cả Notion database và Postgres (nếu bật). Lỗi AI cũng được log với category "error".</span>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Mô tả</th></tr>
+    <tr><td><span class="method method-get">GET</span></td><td>/api/webhook/messenger</td><td>Xác thực webhook Facebook (hub.verify_token)</td></tr>
+    <tr><td><span class="method method-post">POST</span></td><td>/api/webhook/messenger</td><td>Nhận tin nhắn từ Messenger → AI → phản hồi</td></tr>
+    <tr><td><span class="method method-post">POST</span></td><td>/api/webhook/telegram</td><td>Nhận tin nhắn từ Telegram → AI → phản hồi</td></tr>
+  </table>
+
+  <div class="files">
+    <strong>Files:</strong> controllers/webhook.controller.ts · services/telegram.service.ts · services/messenger.service.ts · services/telegram-recipient.service.ts · services/facebook-recipient.service.ts
+  </div>
+  <div class="env-list">
+    <span class="env-var">TELEGRAM_BOT_TOKEN</span>
+    <span class="env-var">FB_PAGE_ACCESS_TOKEN</span>
+    <span class="env-var">FB_VERIFY_TOKEN</span>
+  </div>
+</section>
+
+<!-- ===== 4. LOGGING ===== -->
+<section id="logging">
+  <h2>📊 Logging & Lịch sử <span class="badge badge-be">Backend</span></h2>
+  <p>Lưu trữ lịch sử tương tác AI vào dual storage: Notion database (chính) và PostgreSQL (tùy chọn).</p>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <strong>Notion Logging</strong>
+      <span>Sử dụng <code>@notionhq/client</code> để tạo page trong Notion DB. Map các field: Prompt, Category, Title, Value, Date thành Notion properties.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Postgres Logging</strong>
+      <span>Kích hoạt bằng <code>ENABLE_POSTGRES_STORAGE=true</code>. Insert bản ghi vào bảng <code>logs</code> song song với Notion. Hỗ trợ cả connection string lẫn host/port/db riêng lẻ.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Xem lịch sử</strong>
+      <span>API <code>GET /api/logs</code> đọc từ Notion, trả danh sách các bản ghi gần nhất cho Dashboard hiển thị.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Migration System</strong>
+      <span>Script <code>migrate.ts</code> quản lý schema DB: tracking bảng <code>_migrations</code>, chạy các file SQL theo thứ tự, hỗ trợ rollback on failure.</span>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Mô tả</th></tr>
+    <tr><td><span class="method method-get">GET</span></td><td>/api/logs</td><td>Lấy lịch sử tương tác từ Notion</td></tr>
+    <tr><td><span class="method method-get">GET</span></td><td>/api/health</td><td>Health check — trả version và uptime</td></tr>
+  </table>
+
+  <div class="files">
+    <strong>Files:</strong> controllers/log.controller.ts · controllers/health.controller.ts · services/notion.service.ts · services/postgres.service.ts · migrate.ts · migrations/*.sql
+  </div>
+  <div class="env-list">
+    <span class="env-var">NOTION_API_KEY</span>
+    <span class="env-var">NOTION_DATABASE_ID</span>
+    <span class="env-var">ENABLE_POSTGRES_STORAGE</span>
+    <span class="env-var">POSTGRES_URL</span>
+  </div>
+</section>
+
+<!-- ===== 5. IDENTITY & VOTES ===== -->
+<section id="identity">
+  <h2>🎯 Identity & Votes <span class="badge badge-be">Backend</span> <span class="badge badge-fe">Frontend</span></h2>
+  <p>Tính năng theo dõi thói quen (habit tracking). Người dùng khai báo một "Identity" (tuyên bố bản thân), sau đó tạo và theo dõi các "Votes" (hành động hàng ngày) để xây dựng chuỗi streak.</p>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <strong>Identity Profile</strong>
+      <span>Mỗi user có 1 bản ghi Identity chứa text tuyên bố. Tạo mới hoặc cập nhật qua <code>PUT /api/identity</code>.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Habit Votes</strong>
+      <span>Tạo các habit (vote items), đánh dấu "đã làm hôm nay" bằng toggle. Mỗi ngày mỗi vote chỉ có thể toggle 1 lần (composite PK: vote_id + vote_date).</span>
+    </div>
+    <div class="feature-item">
+      <strong>Streak Tracking</strong>
+      <span>Tính chuỗi ngày liên tiếp (<code>calcStreak</code>), theo dõi hoạt động 7 ngày gần nhất, cảnh báo khi bỏ lỡ 2 ngày liên tiếp (<code>shouldWarnNeverMissTwice</code>).</span>
+    </div>
+    <div class="feature-item">
+      <strong>Frontend Component</strong>
+      <span>Component <code>IdentityVotes.tsx</code> hiển thị identity, danh sách votes, nút toggle hàng ngày, streaks, và indicator cảnh báo.</span>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Mô tả</th></tr>
+    <tr><td><span class="method method-get">GET</span></td><td>/api/identity</td><td>Lấy Identity profile</td></tr>
+    <tr><td><span class="method method-put">PUT</span></td><td>/api/identity</td><td>Cập nhật Identity profile</td></tr>
+    <tr><td><span class="method method-get">GET</span></td><td>/api/votes</td><td>Lấy danh sách votes + streak data</td></tr>
+    <tr><td><span class="method method-post">POST</span></td><td>/api/votes</td><td>Tạo vote mới</td></tr>
+    <tr><td><span class="method method-delete">DELETE</span></td><td>/api/votes/:id</td><td>Xóa vote</td></tr>
+    <tr><td><span class="method method-post">POST</span></td><td>/api/votes/:id/toggle</td><td>Toggle đánh dấu vote hôm nay</td></tr>
+  </table>
+
+  <div class="files">
+    <strong>Files:</strong> controllers/identity-votes.controller.ts · services/identity-votes.service.ts · schemas/identity-votes.schema.ts · components/IdentityVotes.tsx · migrations/002_create_identity_votes_tables.sql
+  </div>
+  <div class="env-list">
+    <span class="env-var">POSTGRES_URL</span>
+  </div>
+</section>
+
+<!-- ===== 6. FRONTEND ===== -->
+<section id="frontend">
+  <h2>🖥️ Giao diện Frontend <span class="badge badge-fe">Frontend</span></h2>
+  <p>Single-page app React 19 + Vite + Tailwind CSS v4. Thiết kế theo hệ thống Bento Design (pastel peach/slate blue, rounded cards, motion animations).</p>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <strong>Trang đăng nhập</strong>
+      <span><code>LoginPage.tsx</code> — Form đăng nhập hỗ trợ 2 tab: mật khẩu và OTP. Animation chuyển đổi mượt với Framer Motion.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Dashboard chính</strong>
+      <span><code>App.tsx</code> — Sidebar navigation (có thể toggle ẩn/hiện), chuyển đổi giữa Console và Lịch sử. Dark/Light mode toggle lưu vào localStorage.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Console — Phân loại</strong>
+      <span>Textarea nhập văn bản → gửi tới AI → hiển thị kết quả JSON phân loại (category, title, value, date).</span>
+    </div>
+    <div class="feature-item">
+      <strong>Console — Identity & Votes</strong>
+      <span>Tab thứ hai trong Console, render component <code>IdentityVotes</code> để quản lý thói quen hàng ngày.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Lịch sử</strong>
+      <span>Card-based feed hiển thị danh sách tương tác AI gần đây từ Notion/Postgres.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Centralized API Client</strong>
+      <span><code>lib/api.ts</code> — Axios instance tự động gắn JWT Bearer token từ localStorage, base URL theo môi trường.</span>
+    </div>
+  </div>
+
+  <div class="files">
+    <strong>Files:</strong> App.tsx · main.tsx · index.css · lib/api.ts · pages/LoginPage.tsx · components/IdentityVotes.tsx
+  </div>
+</section>
+
+<!-- ===== 7. MIDDLEWARE ===== -->
+<section id="middleware">
+  <h2>🛡️ Middleware & Bảo mật <span class="badge badge-mid">Middleware</span></h2>
+  <p>Các tầng cross-cutting concern xử lý bảo mật, validation, rate limiting, logging, và CORS trước khi request đến controller.</p>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <strong>Rate Limiting</strong>
+      <span>2 limiter riêng biệt: AI endpoint (20 req/phút), Webhook endpoints (100 req/phút). Sử dụng <code>express-rate-limit</code>.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Request Validation</strong>
+      <span>Middleware <code>validateBody</code> dùng Zod schema để validate request body. Trả 400 kèm error messages nếu không hợp lệ.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Structured Logging</strong>
+      <span>Logger <code>pino</code> ghi log có cấu trúc (JSON) cho toàn bộ request lifecycle và errors.</span>
+    </div>
+    <div class="feature-item">
+      <strong>CORS</strong>
+      <span>Dynamic origin từ <code>CORS_ORIGIN</code> env var trong production. Development cho phép mọi origin.</span>
+    </div>
+  </div>
+
+  <div class="files">
+    <strong>Files:</strong> middlewares/authMiddleware.ts · middlewares/rateLimiter.ts · middlewares/validate.ts · middlewares/logger.ts · schemas/*.ts
+  </div>
+</section>
+
+<!-- ===== 8. INFRA ===== -->
+<section id="infra">
+  <h2>🚀 Hạ tầng & Triển khai <span class="badge badge-infra">Infra</span></h2>
+  <p>Hỗ trợ 3 mô hình triển khai: local dev (Vite HMR), serverless (Vercel), và container (Docker/VPS).</p>
+
+  <div class="feature-grid">
+    <div class="feature-item">
+      <strong>Local Development</strong>
+      <span><code>server.ts</code> chạy Express + Vite middleware với HMR. Frontend proxy API calls tới cùng port. Chạy bằng <code>npm run dev</code> → <code>tsx server.ts</code>.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Vercel Serverless</strong>
+      <span><code>api/index.ts</code> export Express app, <code>vercel.json</code> rewrite <code>/api/*</code> tới serverless function. Branch <code>main-vercel</code> auto-deploy.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Docker / VPS</strong>
+      <span>Multi-stage Dockerfile: build frontend → compile server → runtime image tối giản. Docker Compose bao gồm app + Postgres. Health check bằng curl.</span>
+    </div>
+    <div class="feature-item">
+      <strong>CI/CD (GitHub Actions)</strong>
+      <span>Workflow <code>ci.yml</code>: type check → test (với Postgres service container) → deploy VPS qua SSH (branch main) hoặc Vercel (branch main-vercel).</span>
+    </div>
+    <div class="feature-item">
+      <strong>Database Migrations</strong>
+      <span>Script <code>migrate.ts</code> hỗ trợ <code>up</code> (chạy migrations) và <code>status</code> (xem trạng thái). Tracking qua bảng <code>_migrations</code>.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Telegram Webhook Setup</strong>
+      <span>Script <code>scratch/set-telegram-webhook.ts</code> gọi Telegram API để đăng ký webhook URL cho bot.</span>
+    </div>
+  </div>
+
+  <div class="files">
+    <strong>Files:</strong> server.ts · api/index.ts · Dockerfile · docker-compose.yml · vercel.json · .github/workflows/ci.yml · migrate.ts · scratch/set-telegram-webhook.ts
+  </div>
+</section>
+
+<!-- ===== 9. DX ===== -->
+<section id="dx">
+  <h2>🛠️ Developer Tooling <span class="badge badge-infra">Tooling</span></h2>
+  <p>Scripts, cấu hình, và agent skills phục vụ quá trình phát triển.</p>
+
+  <table>
+    <tr><th>Lệnh</th><th>Mô tả</th></tr>
+    <tr><td>npm run dev</td><td>Khởi chạy server dev với Vite HMR</td></tr>
+    <tr><td>npm run build</td><td>Build frontend (Vite → dist/)</td></tr>
+    <tr><td>npm run build:server</td><td>Compile server TypeScript (→ build/)</td></tr>
+    <tr><td>npm run build:prod</td><td>Build cả frontend + server</td></tr>
+    <tr><td>npm run lint</td><td>Type check với tsc --noEmit</td></tr>
+    <tr><td>npm run test</td><td>Chạy test suite bằng Vitest</td></tr>
+    <tr><td>npm run migrate</td><td>Chạy database migrations</td></tr>
+    <tr><td>npm run migrate:status</td><td>Xem trạng thái migrations</td></tr>
+    <tr><td>npm run clean</td><td>Xóa dist/ và build/</td></tr>
+    <tr><td>npm run openapi:build</td><td>Generate API docs HTML từ openapi.yaml</td></tr>
+    <tr><td>npm start</td><td>Chạy server production (node build/server.js)</td></tr>
+  </table>
+
+  <div class="divider"></div>
+
+  <p><strong>Agent Skills (AI-assisted development):</strong></p>
+  <div class="feature-grid">
+    <div class="feature-item">
+      <strong>Bento Design System</strong>
+      <span>Quy tắc thiết kế UI: spacing 4/8/12/16/24/32px, font Inter + JetBrains Mono, màu pastel peach + slate blue, dark/light mode tokens.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Add Service / Add Webhook</strong>
+      <span>Hướng dẫn agent tạo service mới hoặc webhook mới theo đúng kiến trúc project.</span>
+    </div>
+    <div class="feature-item">
+      <strong>Debug API / Frontend Component</strong>
+      <span>Workflow debug endpoint hoặc tạo React component theo chuẩn project.</span>
+    </div>
+    <div class="feature-item">
+      <strong>GitNexus Code Intelligence</strong>
+      <span>Impact analysis, refactoring safety, codebase exploration qua graph index (281 symbols, 398 relationships).</span>
+    </div>
+  </div>
+
+  <div class="files">
+    <strong>Files:</strong> .agent/skills/**/SKILL.md · .claude/skills/**/SKILL.md · .codex/config.toml · AGENTS.md
+  </div>
+</section>
+
+<div class="footer">
+  Gemini Bridge · Tạo tự động từ phân tích mã nguồn · 23/07/2026
+</div>
+
+</body>
+</html>
