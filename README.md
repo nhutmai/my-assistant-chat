@@ -1,6 +1,6 @@
-# Gemini Bridge
+# My Assisstance
 
-Gemini Bridge is a full-stack TypeScript app that connects AI inference with messaging channels and persistent logging. It exposes a React/Vite frontend, an Express API layer, Telegram and Messenger webhooks, and Notion-backed interaction logs.
+My Assisstance is a full-stack TypeScript app that connects AI inference with messaging channels and persistent logging. It exposes a React/Vite frontend, an Express API layer, Telegram and Messenger webhooks, and Notion-backed interaction logs.
 
 ## Tech Stack
 

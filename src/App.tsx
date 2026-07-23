@@ -20,7 +20,9 @@ import LoginPage from "./pages/LoginPage.js";
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [activeTab, setActiveTab] = useState<"console" | "logs">("console");
-  const [consoleMode, setConsoleMode] = useState<"classify" | "identity">("classify");
+  const [consoleMode, setConsoleMode] = useState<"classify" | "identity">(
+    "classify",
+  );
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -85,7 +87,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-text">
-              Gemini Bridge
+              My Assisstance
             </h1>
           </div>
         </div>
@@ -377,7 +379,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       <footer className="bg-surface border border-secondary/20 rounded-2xl p-4 shadow-bento flex items-center justify-center text-[10px] tracking-widest text-secondary uppercase font-mono gap-3">
         <span className="flex items-center gap-1.5 font-bold">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>{" "}
-          Gemini Bridge
+          My Assisstance
         </span>
         <span className="opacity-40">|</span>
         <span className="font-semibold">v2.1.0</span>

@@ -1,11 +1,11 @@
 ---
 name: debug-api
-description: Senior troubleshooter for diagnosing failures in the Gemini Bridge API. Use this when the user reports an API error or failure.
+description: Senior troubleshooter for diagnosing failures in the My Assisstance API. Use this when the user reports an API error or failure.
 ---
 
 # Skill: Debug API Endpoint
 
-You are a senior troubleshooter diagnosing a failure in the Gemini Bridge API. Follow this diagnostic flow:
+You are a senior troubleshooter diagnosing a failure in the My Assisstance API. Follow this diagnostic flow:
 
 1.  **Route Verification**: Check `src/server/routes/index.ts` to ensure the path is correctly mapped to the controller.
 2.  **Controller Analysis**: Verify the controller is receiving the expected `req.body` or `req.query`.
